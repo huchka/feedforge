@@ -72,3 +72,8 @@ variable "node_service_account" {
   type        = string
   description = "Service account email for GKE nodes"
 }
+
+variable "environment" {
+  type        = string
+  description = "Environment name (e.g. dev, staging, prod)"
+}

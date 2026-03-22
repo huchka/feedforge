@@ -62,7 +62,7 @@ resource "google_container_node_pool" "primary" {
 
     labels = {
       "part-of" = "feedforge"
-      "env"     = "dev"
+      "env"     = var.environment
     }
 
     metadata = {

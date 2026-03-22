@@ -24,6 +24,7 @@ module "gke" {
   pods_range_name      = module.network.pods_range_name
   services_range_name  = module.network.services_range_name
   node_service_account = module.iam.gke_node_sa_email
+  environment          = "dev"
 
   depends_on = [module.network, module.iam]
 }
