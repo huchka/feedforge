@@ -1,0 +1,37 @@
+# Terraform
+terraform/.terraform/
+terraform/**/.terraform/
+terraform/**/*.tfstate
+terraform/**/*.tfstate.backup
+terraform/**/*.tfvars
+terraform/**/.terraform.lock.hcl
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
+
+# K8s secrets (if generated locally)
+k8s/**/secret-*.yaml
+!k8s/**/secret-*.yaml.example
