@@ -54,18 +54,18 @@
 **Goal**: GKE cluster running, nginx hello-world reachable from internet.
 **Verification**: `curl <external-ip>` returns nginx welcome page.
 
-- [ ] Create GCP project, enable APIs (container, compute, artifactregistry, cloudbuild)
-- [ ] Create GCS bucket for Terraform state
-- [ ] Write Terraform: network module (VPC, subnet)
-- [ ] Write Terraform: gke module (cluster, node pool)
-- [ ] Write Terraform: artifact-registry module
-- [ ] Write Terraform: iam module (basic service accounts)
-- [ ] Write Terraform: dev environment (compose modules)
-- [ ] `terraform plan` → review → `terraform apply`
-- [ ] `gcloud container clusters get-credentials` → verify kubectl access
-- [ ] Deploy nginx pod + LoadBalancer Service manually
-- [ ] Verify external access
-- [ ] `terraform destroy` (save costs, we'll recreate)
+- [x] Create GCP project, enable APIs (container, compute, artifactregistry, cloudbuild)
+- [x] Create GCS bucket for Terraform state
+- [x] Write Terraform: network module (VPC, subnet)
+- [x] Write Terraform: gke module (cluster, node pool)
+- [x] Write Terraform: artifact-registry module
+- [x] Write Terraform: iam module (basic service accounts)
+- [x] Write Terraform: dev environment (compose modules)
+- [x] `terraform plan` → review → `terraform apply`
+- [x] `gcloud container clusters get-credentials` → verify kubectl access
+- [x] Deploy nginx pod + LoadBalancer Service manually
+- [x] Verify external access
+- [ ] `terraform destroy` (keeping cluster running, ~$2/day)
 
 ## Phase 1: Core Application (Backend + DB)
 **Goal**: FastAPI backend + PostgreSQL running in cluster, CRUD for feeds and articles working.
