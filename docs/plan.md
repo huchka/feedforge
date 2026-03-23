@@ -71,17 +71,17 @@
 **Goal**: FastAPI backend + PostgreSQL running in cluster, CRUD for feeds and articles working.
 **Verification**: `curl <cluster-ip>:8000/api/health` returns OK, can add feeds and list articles via API.
 
-- [ ] Write FastAPI app skeleton (health check, feed CRUD, article list)
-- [ ] Write SQLAlchemy models (Feed, Article)
-- [ ] Set up Alembic for DB migrations
-- [ ] Write Dockerfile for backend
-- [ ] Build and push image to Artifact Registry
-- [ ] Write K8s manifests: PostgreSQL StatefulSet + headless Service + PVC + Secret
-- [ ] Write K8s manifests: Backend Deployment + Service + ConfigMap
-- [ ] Use init container for DB migration
-- [ ] Set resource requests/limits on all pods
-- [ ] Add liveness/readiness probes to backend
-- [ ] Deploy and verify API works end-to-end
+- [x] Write FastAPI app skeleton (health check, feed CRUD, article list)
+- [x] Write SQLAlchemy models (Feed, Article)
+- [x] Set up Alembic for DB migrations
+- [x] Write Dockerfile for backend
+- [x] Build and push image to Artifact Registry
+- [x] Write K8s manifests: PostgreSQL StatefulSet + headless Service + PVC + Secret
+- [x] Write K8s manifests: Backend Deployment + Service + ConfigMap
+- [x] Use init container for DB migration
+- [x] Set resource requests/limits on all pods
+- [x] Add liveness/readiness probes to backend
+- [x] Deploy and verify API works end-to-end
 
 ## Phase 2: Workers (Feed Fetcher + AI Summarizer)
 **Goal**: Feeds are fetched on schedule, articles are summarized automatically.
