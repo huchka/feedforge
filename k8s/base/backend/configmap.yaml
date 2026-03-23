@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: feedforge
+data:
+  FEEDFORGE_DB_HOST: "postgres.feedforge.svc.cluster.local"
+  FEEDFORGE_DB_PORT: "5432"
+  FEEDFORGE_DB_NAME: "feedforge"
+  FEEDFORGE_DEBUG: "false"
