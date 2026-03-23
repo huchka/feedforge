@@ -21,7 +21,7 @@ spec:
     spec:
       initContainers:
         - name: run-migrations
-          image: REGISTRY/backend:TAG
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:0.1.2
           command: ["alembic", "upgrade", "head"]
           envFrom:
             - configMapRef:
@@ -46,7 +46,7 @@ spec:
               memory: 128Mi
       containers:
         - name: backend
-          image: REGISTRY/backend:TAG
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:0.1.2
           ports:
             - containerPort: 8000
               name: http
