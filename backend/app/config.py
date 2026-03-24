@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     redis_port: int = 6379
     redis_db: int = 0
 
+    llm_provider: str = "gemini"
+    llm_model: str = "gemini-2.5-flash"
+    gcp_project_id: str = ""
+    gcp_location: str = "us-central1"
+
     model_config = {"env_prefix": "FEEDFORGE_"}
 
     @property

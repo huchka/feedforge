@@ -13,4 +13,8 @@ data:
   FEEDFORGE_DB_NAME: "feedforge"
   FEEDFORGE_REDIS_HOST: "redis.feedforge.svc.cluster.local"
   FEEDFORGE_REDIS_PORT: "6379"
+  FEEDFORGE_LLM_PROVIDER: "gemini"
+  FEEDFORGE_LLM_MODEL: "gemini-2.5-flash"
+  FEEDFORGE_GCP_PROJECT_ID: "project-76da2d1f-231c-4c94-ae9"
+  FEEDFORGE_GCP_LOCATION: "us-central1"
   FEEDFORGE_DEBUG: "false"
