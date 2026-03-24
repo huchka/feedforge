@@ -11,4 +11,6 @@ data:
   FEEDFORGE_DB_HOST: "postgres.feedforge.svc.cluster.local"
   FEEDFORGE_DB_PORT: "5432"
   FEEDFORGE_DB_NAME: "feedforge"
+  FEEDFORGE_REDIS_HOST: "redis.feedforge.svc.cluster.local"
+  FEEDFORGE_REDIS_PORT: "6379"
   FEEDFORGE_DEBUG: "false"

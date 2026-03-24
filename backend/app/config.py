@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     db_password: str = "feedforge"
     debug: bool = False
 
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_db: int = 0
+
     model_config = {"env_prefix": "FEEDFORGE_"}
 
     @property

@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: feed-fetcher
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: feed-fetcher
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: feedforge
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: feed-fetcher
+            app.kubernetes.io/component: worker
+            app.kubernetes.io/part-of: feedforge
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: fetcher
+              image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:0.2.0
+              command: ["python", "-m", "app.fetcher"]
+              envFrom:
+                - configMapRef:
+                    name: backend-config
+              env:
+                - name: FEEDFORGE_DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_USER
+                - name: FEEDFORGE_DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_PASSWORD
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
