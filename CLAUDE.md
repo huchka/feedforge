@@ -7,9 +7,10 @@ RSS feed aggregator with AI summarization on GKE. See README.md for project over
 | Choice | Value | Why |
 |--------|-------|-----|
 | GKE mode | Standard (not Autopilot) | Learning node management, scheduling |
-| Cluster | Zonal (asia-northeast1-a) | Free tier covers management fee |
+| Cluster | Zonal (us-central1-f) | Free tier covers management fee |
 | Nodes | e2-medium (2 vCPU, 4GB), 2 nodes (autoscaler 1-3) | Balance cost vs capacity |
-| Registry | Artifact Registry (asia-northeast1) | Regional = cheaper egress |
+| Registry | Artifact Registry (us-central1) | Regional = cheaper egress |
+| TF state bucket | GCS (asia-northeast1) | Created before region change, left as-is |
 | CI | Cloud Build | 120 free build-min/day |
 | IaC | Terraform with modules, GCS remote state | Learning goal |
 | K8s config | kustomize (base + overlays) | Environment management |
@@ -28,9 +29,9 @@ RSS feed aggregator with AI summarization on GKE. See README.md for project over
 - Format with `terraform fmt` before commit.
 
 ### Kubernetes
-- `kubectl diff` before `kubectl apply` for manual deploys.
+- NEVER run `kubectl` commands — the user runs all K8s commands themselves (learning project).
+- Provide the commands to run, but don't execute them.
 - NEVER `kubectl edit` — always change manifests and re-apply.
-- NEVER `kubectl delete namespace` on production.
 - Label everything: `app.kubernetes.io/name`, `app.kubernetes.io/component`, `app.kubernetes.io/part-of: feedforge`.
 
 ### Docker
