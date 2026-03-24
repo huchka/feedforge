@@ -16,3 +16,4 @@ resources:
   - backend/service.yaml
   - backend/deployment.yaml
   - fetcher/cronjob.yaml
+  - summarizer/deployment.yaml

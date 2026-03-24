@@ -11,6 +11,7 @@ locals {
     "roles/monitoring.viewer",
     "roles/artifactregistry.reader",
     "roles/storage.objectViewer",
+    "roles/aiplatform.user",
   ]
 }
 
