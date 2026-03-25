@@ -1,0 +1,12 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: feedforge-backend-config
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: feedforge-backend-config
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: feedforge
+spec:
+  securityPolicy:
+    name: feedforge-allow-ip
