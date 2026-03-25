@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.article import Article
 from app.models.feed import Feed
-from app.schemas.article import ArticleCreate, ArticleResponse
+from app.schemas.article import ArticleCreate, ArticleResponse, ArticleUpdate
 
 router = APIRouter()
 
@@ -29,6 +29,20 @@ def get_article(article_id: uuid.UUID, db: Session = Depends(get_db)) -> Article
     article = db.get(Article, article_id)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
+    return article
+
+
+@router.patch("/articles/{article_id}", response_model=ArticleResponse)
+def update_article(
+    article_id: uuid.UUID, body: ArticleUpdate, db: Session = Depends(get_db)
+) -> Article:
+    article = db.get(Article, article_id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    for field, value in body.model_dump(exclude_unset=True).items():
+        setattr(article, field, value)
+    db.commit()
+    db.refresh(article)
     return article
 
 
