@@ -17,5 +17,6 @@ resources:
   - backend/deployment.yaml
   - frontend/service.yaml
   - frontend/deployment.yaml
+  - ingress/ingress.yaml
   - fetcher/cronjob.yaml
   - summarizer/deployment.yaml

@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: feedforge-ingress
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: feedforge-ingress
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: feedforge
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+spec:
+  defaultBackend:
+    service:
+      name: frontend
+      port:
+        number: 8080
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 8080
