@@ -34,3 +34,9 @@ module "artifact_registry" {
   project_id = var.project_id
   region     = var.region
 }
+
+module "cloud_armor" {
+  source     = "../../modules/cloud-armor"
+  project_id = var.project_id
+  allowed_ips = var.allowed_ips
+}

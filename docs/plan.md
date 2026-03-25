@@ -26,18 +26,18 @@
 
 | Concept | Phase | Status |
 |---------|-------|--------|
-| Deployment | P1 | ☐ |
-| StatefulSet | P1 | ☐ |
-| Service (ClusterIP) | P1 | ☐ |
-| Service (headless) | P1 | ☐ |
-| ConfigMap | P1 | ☐ |
-| Secret | P1 | ☐ |
-| PersistentVolumeClaim | P1 | ☐ |
-| Ingress | P3 | ☐ |
-| CronJob | P2 | ☐ |
+| Deployment | P1 | ☑ |
+| StatefulSet | P1 | ☑ |
+| Service (ClusterIP) | P1 | ☑ |
+| Service (headless) | P1 | ☑ |
+| ConfigMap | P1 | ☑ |
+| Secret | P1 | ☑ |
+| PersistentVolumeClaim | P1 | ☑ |
+| Ingress | P3 | ☑ |
+| CronJob | P2 | ☑ |
 | Job | P2 | ☐ |
 | HPA | P4 | ☐ |
-| Init container | P1 | ☐ |
+| Init container | P1 | ☑ |
 | Sidecar container | P4 | ☐ |
 | NetworkPolicy | P4 | ☐ |
 | RBAC / ServiceAccount | P4 | ☐ |
@@ -45,10 +45,11 @@
 | SecurityContext | P4 | ☐ |
 | ResourceQuota / LimitRange | P4 | ☐ |
 | PodDisruptionBudget | P4 | ☐ |
-| Resource requests/limits | P1 | ☐ |
-| Liveness/readiness probes | P1 | ☐ |
+| Resource requests/limits | P1 | ☑ |
+| Liveness/readiness probes | P1 | ☑ |
 | Rolling update strategy | P3 | ☐ |
-| kustomize overlays | P3 | ☐ |
+| kustomize overlays | P3 | ☑ |
+| BackendConfig (Cloud Armor) | P3 | ☑ |
 
 ## Phase 0: GCP Foundation + GKE Cluster
 **Goal**: GKE cluster running, nginx hello-world reachable from internet.
@@ -87,24 +88,25 @@
 **Goal**: Feeds are fetched on schedule, articles are summarized automatically.
 **Verification**: Add a feed URL → wait for CronJob → articles appear with summaries.
 
-- [ ] Write feed fetcher script (feedparser library, pushes to Redis queue)
-- [ ] Write AI summarizer worker (consumes Redis queue, calls LLM API, writes to DB)
-- [ ] Write Dockerfile for workers
-- [ ] Deploy Redis (Deployment + Service)
-- [ ] Write K8s CronJob manifest for feed fetcher
-- [ ] Write K8s Deployment manifest for summarizer (long-running consumer)
-- [ ] Write Secrets for LLM API keys
-- [ ] Deploy and verify: add feed → CronJob fires → articles fetched → summarized
+- [x] Write feed fetcher script (feedparser library, pushes to Redis queue)
+- [x] Write AI summarizer worker (consumes Redis queue, calls LLM API, writes to DB)
+- [x] Write Dockerfile for workers
+- [x] Deploy Redis (Deployment + Service)
+- [x] Write K8s CronJob manifest for feed fetcher
+- [x] Write K8s Deployment manifest for summarizer (long-running consumer)
+- [x] Write Secrets for LLM API keys
+- [x] Deploy and verify: add feed → CronJob fires → articles fetched → summarized
 
 ## Phase 3: Frontend + Ingress + CI/CD
 **Goal**: Full web UI accessible via Ingress, CI/CD pipeline auto-deploys on push.
 **Verification**: Push to main → Cloud Build triggers → new image deployed → visible in browser.
 
-- [ ] Build React frontend (article list, feed management, search, favorites)
-- [ ] Write Dockerfile for frontend (nginx + static build)
-- [ ] Write K8s manifests: Frontend Deployment + Service
-- [ ] Configure Ingress (path-based: / → frontend, /api → backend)
-- [ ] Set up kustomize overlays for dev
+- [x] Build React frontend (article list, feed management, search, favorites)
+- [x] Write Dockerfile for frontend (nginx + static build)
+- [x] Write K8s manifests: Frontend Deployment + Service
+- [x] Configure Ingress (path-based: / → frontend, /api → backend)
+- [x] Set up kustomize overlays for dev
+- [x] Add Cloud Armor IP restriction (Terraform module + BackendConfig)
 - [ ] Write cloudbuild.yaml (build all images → push → deploy)
 - [ ] Set up Cloud Build trigger on GitHub push to main
 - [ ] Write skaffold.yaml for local dev loop

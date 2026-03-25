@@ -12,6 +12,11 @@ class ArticleCreate(BaseModel):
     published_at: datetime | None = None
 
 
+class ArticleUpdate(BaseModel):
+    is_read: bool | None = None
+    is_favorite: bool | None = None
+
+
 class ArticleResponse(BaseModel):
     id: uuid.UUID
     feed_id: uuid.UUID
