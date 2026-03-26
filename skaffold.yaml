@@ -1,0 +1,32 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: feedforge
+
+build:
+  artifacts:
+    - image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend
+      context: backend
+      docker:
+        dockerfile: Dockerfile
+    - image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/frontend
+      context: frontend
+      docker:
+        dockerfile: Dockerfile
+
+deploy:
+  kustomize:
+    paths:
+      - k8s/overlays/dev
+
+portForward:
+  - resourceType: service
+    resourceName: backend
+    namespace: feedforge
+    port: 8000
+    localPort: 8000
+  - resourceType: service
+    resourceName: frontend
+    namespace: feedforge
+    port: 80
+    localPort: 8080

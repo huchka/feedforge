@@ -1,0 +1,52 @@
+steps:
+  # Build backend image (used by backend, summarizer, fetcher)
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/feedforge/backend:$SHORT_SHA'
+      - './backend'
+
+  # Build frontend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/feedforge/frontend:$SHORT_SHA'
+      - './frontend'
+
+  # Push backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/feedforge/backend:$SHORT_SHA'
+
+  # Push frontend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/feedforge/frontend:$SHORT_SHA'
+
+  # Deploy to GKE via kustomize
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud container clusters get-credentials feedforge-cluster \
+          --zone us-central1-f --project $PROJECT_ID
+
+        cd k8s/overlays/dev
+        kustomize edit set image \
+          us-central1-docker.pkg.dev/$PROJECT_ID/feedforge/backend=us-central1-docker.pkg.dev/$PROJECT_ID/feedforge/backend:$SHORT_SHA \
+          us-central1-docker.pkg.dev/$PROJECT_ID/feedforge/frontend=us-central1-docker.pkg.dev/$PROJECT_ID/feedforge/frontend:$SHORT_SHA
+
+        kubectl apply -k .
+        kubectl -n feedforge rollout status deployment/backend --timeout=120s
+        kubectl -n feedforge rollout status deployment/frontend --timeout=120s
+        kubectl -n feedforge rollout status deployment/summarizer --timeout=120s
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '600s'

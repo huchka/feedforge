@@ -22,3 +22,25 @@ resource "google_project_iam_member" "gke_node_roles" {
   role    = each.value
   member  = "serviceAccount:${google_service_account.gke_nodes.email}"
 }
+
+# Cloud Build default SA — needs GKE deploy + AR push permissions
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+locals {
+  cloud_build_sa = "${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
+
+  cloud_build_roles = [
+    "roles/container.developer",
+    "roles/artifactregistry.writer",
+  ]
+}
+
+resource "google_project_iam_member" "cloud_build_roles" {
+  for_each = toset(local.cloud_build_roles)
+
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:${local.cloud_build_sa}"
+}
