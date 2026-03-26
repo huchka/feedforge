@@ -23,17 +23,18 @@ resource "google_project_iam_member" "gke_node_roles" {
   member  = "serviceAccount:${google_service_account.gke_nodes.email}"
 }
 
-# Cloud Build default SA — needs GKE deploy + AR push permissions
-data "google_project" "project" {
-  project_id = var.project_id
+# Cloud Build — user-managed SA (required for v2 triggers)
+resource "google_service_account" "cloud_build" {
+  account_id   = "feedforge-cloud-build"
+  display_name = "FeedForge Cloud Build Service Account"
+  project      = var.project_id
 }
 
 locals {
-  cloud_build_sa = "${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
-
   cloud_build_roles = [
     "roles/container.developer",
     "roles/artifactregistry.writer",
+    "roles/logging.logWriter",
   ]
 }
 
@@ -42,5 +43,5 @@ resource "google_project_iam_member" "cloud_build_roles" {
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:${local.cloud_build_sa}"
+  member  = "serviceAccount:${google_service_account.cloud_build.email}"
 }

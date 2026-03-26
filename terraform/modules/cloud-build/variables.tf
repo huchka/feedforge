@@ -22,3 +22,8 @@ variable "repository_name" {
   type        = string
   description = "Cloud Build v2 linked repository name"
 }
+
+variable "service_account_email" {
+  type        = string
+  description = "User-managed service account email for Cloud Build"
+}

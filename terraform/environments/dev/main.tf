@@ -42,9 +42,12 @@ module "cloud_armor" {
 }
 
 module "cloud_build" {
-  source          = "../../modules/cloud-build"
-  project_id      = var.project_id
-  region          = var.region
-  connection_name = "github"
-  repository_name = "huchka-feedforge"
+  source                = "../../modules/cloud-build"
+  project_id            = var.project_id
+  region                = var.region
+  connection_name       = "github"
+  repository_name       = "huchka-feedforge"
+  service_account_email = module.iam.cloud_build_sa_email
+
+  depends_on = [module.iam]
 }
