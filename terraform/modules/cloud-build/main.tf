@@ -1,7 +1,3 @@
-data "google_project" "current" {
-  project_id = var.project_id
-}
-
 resource "google_cloudbuild_trigger" "deploy" {
   name        = var.trigger_name
   project     = var.project_id
@@ -15,6 +11,6 @@ resource "google_cloudbuild_trigger" "deploy" {
     }
   }
 
-  service_account = "projects/${var.project_id}/serviceAccounts/${data.google_project.current.number}@cloudbuild.gserviceaccount.com"
+  service_account = "projects/${var.project_id}/serviceAccounts/${var.service_account_email}"
   filename        = "cloudbuild.yaml"
 }
