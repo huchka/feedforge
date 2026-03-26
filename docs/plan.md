@@ -47,7 +47,7 @@
 | PodDisruptionBudget | P4 | ☐ |
 | Resource requests/limits | P1 | ☑ |
 | Liveness/readiness probes | P1 | ☑ |
-| Rolling update strategy | P3 | ☐ |
+| Rolling update strategy | P3 | ☑ |
 | kustomize overlays | P3 | ☑ |
 | BackendConfig (Cloud Armor) | P3 | ☑ |
 
@@ -107,10 +107,10 @@
 - [x] Configure Ingress (path-based: / → frontend, /api → backend)
 - [x] Set up kustomize overlays for dev
 - [x] Add Cloud Armor IP restriction (Terraform module + BackendConfig)
-- [ ] Write cloudbuild.yaml (build all images → push → deploy)
-- [ ] Set up Cloud Build trigger on GitHub push to main
-- [ ] Write skaffold.yaml for local dev loop
-- [ ] Configure rolling update strategy on Deployments
+- [x] Write cloudbuild.yaml (build all images → push → deploy)
+- [x] Set up Cloud Build trigger on GitHub push to main (Terraform module)
+- [x] Write skaffold.yaml for local dev loop
+- [x] Configure rolling update strategy on Deployments
 - [ ] Verify full CI/CD: push code → auto-deploy → verify in browser
 
 ## Phase 4: Advanced K8s + Notifications

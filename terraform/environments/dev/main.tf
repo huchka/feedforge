@@ -36,7 +36,15 @@ module "artifact_registry" {
 }
 
 module "cloud_armor" {
-  source     = "../../modules/cloud-armor"
-  project_id = var.project_id
+  source      = "../../modules/cloud-armor"
+  project_id  = var.project_id
   allowed_ips = var.allowed_ips
+}
+
+module "cloud_build" {
+  source          = "../../modules/cloud-build"
+  project_id      = var.project_id
+  region          = var.region
+  connection_name = "github"
+  repository_name = "huchka-feedforge"
 }
