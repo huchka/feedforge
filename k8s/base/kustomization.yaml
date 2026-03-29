@@ -15,10 +15,12 @@ resources:
   - backend/configmap.yaml
   - backend/service.yaml
   - backend/deployment.yaml
+  - backend/hpa.yaml
   - frontend/service.yaml
   - frontend/deployment.yaml
   - ingress/ingress.yaml
   - ingress/backend-config.yaml
   - fetcher/cronjob.yaml
   - summarizer/deployment.yaml
+  - summarizer/hpa.yaml
   - digest/cronjob.yaml

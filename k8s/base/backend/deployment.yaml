@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: api
     app.kubernetes.io/part-of: feedforge
 spec:
-  replicas: 1
+  # replicas managed by HPA (backend/hpa.yaml)
   strategy:
     type: RollingUpdate
     rollingUpdate:
