@@ -4,6 +4,7 @@ metadata:
   name: feedforge
 
 build:
+  platforms: ["linux/amd64"]
   artifacts:
     - image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend
       context: backend
@@ -14,10 +15,13 @@ build:
       docker:
         dockerfile: Dockerfile
 
-deploy:
+manifests:
   kustomize:
     paths:
       - k8s/overlays/dev
+
+deploy:
+  kubectl: {}
 
 portForward:
   - resourceType: service

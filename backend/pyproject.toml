@@ -13,4 +13,5 @@ dependencies = [
     "feedparser>=6.0,<7",
     "redis>=5.0,<6",
     "google-genai>=1.0,<2",
+    "httpx>=0.28,<1",
 ]
