@@ -38,7 +38,7 @@
 | Job | P4 | ☐ |
 | HPA | P4 | ☑ |
 | Init container | P1 | ☑ |
-| NetworkPolicy | P5 | ☐ |
+| NetworkPolicy | P5 | ☑ |
 | SecurityContext | P5 | ☐ |
 | RBAC / ServiceAccount | P5 | ☐ |
 | Workload Identity | P5 | ☐ |
@@ -125,8 +125,8 @@
 **Goal**: Least-privilege at network, pod, and identity layers.
 **Verification**: NetworkPolicy blocks unauthorized traffic, pods run non-root, Workload Identity used for GCP access.
 
-- [ ] Add NetworkPolicy (DB only accessible from backend/workers, Redis only from workers)
-- [ ] Enable Calico + metrics-server via Terraform
+- [x] Add NetworkPolicy (DB only accessible from backend/workers, Redis only from workers)
+- [x] Enable Calico + metrics-server via Terraform
 - [ ] Add SecurityContext (non-root, read-only filesystem where possible)
 - [ ] Add RBAC / ServiceAccount (dedicated SAs per workload)
 - [ ] Configure Workload Identity for GCS access (optional: backup DB to GCS)
