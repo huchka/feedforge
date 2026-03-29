@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     gcp_project_id: str = ""
     gcp_location: str = "us-central1"
 
+    # Digest notification
+    digest_lookback_hours: int = 24
+    digest_provider: str = ""  # "slack" | "line" | "" (disabled)
+    digest_webhook_url: str = ""  # Slack incoming webhook URL
+    digest_line_token: str = ""  # LINE channel access token
+    digest_line_user_id: str = ""  # LINE target user/group ID
+
     model_config = {"env_prefix": "FEEDFORGE_"}
 
     @property

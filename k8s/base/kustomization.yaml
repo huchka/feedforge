@@ -21,3 +21,4 @@ resources:
   - ingress/backend-config.yaml
   - fetcher/cronjob.yaml
   - summarizer/deployment.yaml
+  - digest/cronjob.yaml

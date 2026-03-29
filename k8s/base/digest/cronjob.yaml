@@ -1,0 +1,71 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-digest
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: daily-digest
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: feedforge
+spec:
+  schedule: "30 23 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: daily-digest
+            app.kubernetes.io/component: worker
+            app.kubernetes.io/part-of: feedforge
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: digest
+              image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:0.2.1
+              command: ["python", "-m", "app.digest"]
+              envFrom:
+                - configMapRef:
+                    name: backend-config
+              env:
+                - name: FEEDFORGE_DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_USER
+                - name: FEEDFORGE_DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_PASSWORD
+                - name: FEEDFORGE_DIGEST_PROVIDER
+                  value: "line"
+                - name: FEEDFORGE_DIGEST_WEBHOOK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: notification-credentials
+                      key: NOTIFICATION_WEBHOOK_URL
+                      optional: true
+                - name: FEEDFORGE_DIGEST_LINE_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: notification-credentials
+                      key: LINE_CHANNEL_TOKEN
+                      optional: true
+                - name: FEEDFORGE_DIGEST_LINE_USER_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: notification-credentials
+                      key: LINE_USER_ID
+                      optional: true
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
