@@ -20,21 +20,27 @@ LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push"
 LINE_TEXT_LIMIT = 5000
 
 
-def count_recent_articles(db) -> int:
-    """Return total article count from the last N hours (regardless of summary status)."""
+def count_recent_articles(db) -> tuple[int, int]:
+    """Return (total, already_sent) article counts from the last N hours."""
     cutoff = datetime.now(UTC) - timedelta(hours=settings.digest_lookback_hours)
-    stmt = select(func.count(Article.id)).where(Article.fetched_at >= cutoff)
-    return db.scalar(stmt) or 0
+    total = db.scalar(select(func.count(Article.id)).where(Article.fetched_at >= cutoff)) or 0
+    sent = db.scalar(
+        select(func.count(Article.id))
+        .where(Article.fetched_at >= cutoff)
+        .where(Article.digest_sent_at.is_not(None))
+    ) or 0
+    return total, sent
 
 
 def get_recent_articles(db) -> list[Article]:
-    """Return articles with summaries from the last N hours."""
+    """Return unsent articles with summaries from the last N hours."""
     cutoff = datetime.now(UTC) - timedelta(hours=settings.digest_lookback_hours)
     stmt = (
         select(Article)
         .options(joinedload(Article.feed))
         .where(Article.fetched_at >= cutoff)
         .where(Article.summary.is_not(None))
+        .where(Article.digest_sent_at.is_(None))
         .order_by(Article.feed_id, Article.published_at.desc())
     )
     return list(db.scalars(stmt).unique().all())
@@ -117,13 +123,12 @@ def main() -> None:
 
     db = SessionLocal()
     try:
-        total_fetched = count_recent_articles(db)
+        total_fetched, already_sent = count_recent_articles(db)
         articles = get_recent_articles(db)
-        unsummarized = total_fetched - len(articles)
 
         logger.info(
-            "Digest pipeline: %d fetched, %d summarized, %d missing summaries",
-            total_fetched, len(articles), unsummarized,
+            "Digest pipeline: %d fetched, %d already sent, %d to send",
+            total_fetched, already_sent, len(articles),
         )
 
         if not articles:
@@ -132,6 +137,11 @@ def main() -> None:
 
         text = format_digest(articles)
         PROVIDERS[provider](text, len(articles))
+
+        now = datetime.now(UTC)
+        for article in articles:
+            article.digest_sent_at = now
+        db.commit()
 
         elapsed = time.monotonic() - start
         logger.info("Digest complete: %d articles sent (%.1fs)", len(articles), elapsed)
