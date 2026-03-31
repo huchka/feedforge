@@ -20,8 +20,10 @@ BRPOP_TIMEOUT = 30
 
 SYSTEM_PROMPT = (
     "You are a concise article summarizer. "
-    "Given an article title and content, produce a 2-3 sentence summary "
-    "that captures the key points. Be factual and neutral."
+    "Given an article title and content, produce a 1-2 sentence summary "
+    "that captures the key point. Be factual and neutral. "
+    "Aim for around {max_chars} characters. "
+    "Always write complete sentences."
 )
 
 MAX_CONTENT_CHARS = 4000
@@ -62,19 +64,30 @@ def summarize_article(article: Article, client: genai.Client) -> str | None:
     if len(content) > MAX_CONTENT_CHARS:
         content = content[:MAX_CONTENT_CHARS] + "..."
 
+    max_chars = settings.summary_max_chars
     user_message = f"Title: {article.title}\n\nContent:\n{content}"
+    system_prompt = SYSTEM_PROMPT.format(max_chars=max_chars)
 
     try:
         response = client.models.generate_content(
             model=settings.llm_model,
             contents=user_message,
             config=genai.types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
+                system_instruction=system_prompt,
                 max_output_tokens=256,
                 temperature=0.3,
+                thinking_config=genai.types.ThinkingConfig(thinking_budget=0),
             ),
         )
-        return response.text
+        summary = response.text
+        if len(summary) > max_chars:
+            logger.warning(
+                "Summary for article %s exceeded %d chars (%d), truncating",
+                article.id, max_chars, len(summary),
+            )
+            last_period = summary.rfind(".", 0, max_chars)
+            summary = summary[:last_period + 1] if last_period > 0 else summary[:max_chars]
+        return summary
     except Exception:
         logger.exception("Gemini API error for article %s", article.id)
         return None

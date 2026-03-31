@@ -30,8 +30,13 @@ resource "google_container_cluster" "primary" {
       disabled = false
     }
     horizontal_pod_autoscaling {
-      disabled = true
+      disabled = false
     }
+  }
+
+  network_policy {
+    enabled  = true
+    provider = "CALICO"
   }
 
   deletion_protection = false

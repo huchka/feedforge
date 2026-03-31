@@ -19,9 +19,18 @@ spec:
         app.kubernetes.io/component: queue
         app.kubernetes.io/part-of: feedforge
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
       containers:
         - name: redis
           image: redis:7.4-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           ports:
             - containerPort: 6379
               name: redis
@@ -38,9 +47,15 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
           readinessProbe:
             exec:
               command: ["redis-cli", "ping"]
             initialDelaySeconds: 5
             periodSeconds: 5
             failureThreshold: 3
+      volumes:
+        - name: redis-data
+          emptyDir: {}

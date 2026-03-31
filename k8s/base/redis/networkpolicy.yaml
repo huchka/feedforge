@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-allow-clients
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: queue
+    app.kubernetes.io/part-of: feedforge
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: backend
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: summarizer
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: feed-fetcher
+      ports:
+        - protocol: TCP
+          port: 6379

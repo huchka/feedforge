@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
 from app.config import settings
@@ -20,14 +20,27 @@ LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push"
 LINE_TEXT_LIMIT = 5000
 
 
+def count_recent_articles(db) -> tuple[int, int]:
+    """Return (total, already_sent) article counts from the last N hours."""
+    cutoff = datetime.now(UTC) - timedelta(hours=settings.digest_lookback_hours)
+    total = db.scalar(select(func.count(Article.id)).where(Article.fetched_at >= cutoff)) or 0
+    sent = db.scalar(
+        select(func.count(Article.id))
+        .where(Article.fetched_at >= cutoff)
+        .where(Article.digest_sent_at.is_not(None))
+    ) or 0
+    return total, sent
+
+
 def get_recent_articles(db) -> list[Article]:
-    """Return articles with summaries from the last N hours."""
+    """Return unsent articles with summaries from the last N hours."""
     cutoff = datetime.now(UTC) - timedelta(hours=settings.digest_lookback_hours)
     stmt = (
         select(Article)
         .options(joinedload(Article.feed))
         .where(Article.fetched_at >= cutoff)
         .where(Article.summary.is_not(None))
+        .where(Article.digest_sent_at.is_(None))
         .order_by(Article.feed_id, Article.published_at.desc())
     )
     return list(db.scalars(stmt).unique().all())
@@ -54,18 +67,22 @@ def format_digest(articles: list[Article]) -> str:
     return "\n".join(lines)
 
 
-def _send_slack(text: str) -> None:
+def _send_slack(text: str, total_articles: int) -> None:
     resp = httpx.post(settings.digest_webhook_url, json={"text": text}, timeout=30)
     resp.raise_for_status()
-    logger.info("Slack notification sent")
+    logger.info("Slack notification sent (%d chars, %d articles)", len(text), total_articles)
 
 
-def _send_line(text: str) -> None:
+def _send_line(text: str, total_articles: int) -> None:
     if len(text) > LINE_TEXT_LIMIT:
         truncated_at = text.rfind("\n", 0, LINE_TEXT_LIMIT - 60)
         if truncated_at == -1:
             truncated_at = LINE_TEXT_LIMIT - 60
         text = text[:truncated_at] + "\n\n... (truncated, see app for full list)"
+        logger.warning(
+            "LINE message truncated: %d chars -> %d chars (limit %d)",
+            len(text), truncated_at, LINE_TEXT_LIMIT,
+        )
 
     resp = httpx.post(
         LINE_PUSH_URL,
@@ -77,7 +94,7 @@ def _send_line(text: str) -> None:
         timeout=30,
     )
     resp.raise_for_status()
-    logger.info("LINE notification sent")
+    logger.info("LINE notification sent (%d chars, %d articles)", len(text), total_articles)
 
 
 PROVIDERS = {"slack": _send_slack, "line": _send_line}
@@ -106,13 +123,25 @@ def main() -> None:
 
     db = SessionLocal()
     try:
+        total_fetched, already_sent = count_recent_articles(db)
         articles = get_recent_articles(db)
+
+        logger.info(
+            "Digest pipeline: %d fetched, %d already sent, %d to send",
+            total_fetched, already_sent, len(articles),
+        )
+
         if not articles:
             logger.info("No articles with summaries in the last %d hours, skipping", settings.digest_lookback_hours)
             return
 
         text = format_digest(articles)
-        PROVIDERS[provider](text)
+        PROVIDERS[provider](text, len(articles))
+
+        now = datetime.now(UTC)
+        for article in articles:
+            article.digest_sent_at = now
+        db.commit()
 
         elapsed = time.monotonic() - start
         logger.info("Digest complete: %d articles sent (%.1fs)", len(articles), elapsed)

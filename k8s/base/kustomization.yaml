@@ -10,8 +10,10 @@ resources:
   - namespace.yaml
   - postgres/service.yaml
   - postgres/statefulset.yaml
+  - postgres/networkpolicy.yaml
   - redis/deployment.yaml
   - redis/service.yaml
+  - redis/networkpolicy.yaml
   - backend/configmap.yaml
   - backend/service.yaml
   - backend/deployment.yaml

@@ -35,16 +35,16 @@
 | PersistentVolumeClaim | P1 | ☑ |
 | Ingress | P3 | ☑ |
 | CronJob | P2 | ☑ |
-| Job | P2 | ☐ |
-| HPA | P4 | ☐ |
+| Job | P4 | ☐ |
+| HPA | P4 | ☑ |
 | Init container | P1 | ☑ |
-| Sidecar container | P4 | ☐ |
-| NetworkPolicy | P4 | ☐ |
-| RBAC / ServiceAccount | P4 | ☐ |
-| Workload Identity | P4 | ☐ |
-| SecurityContext | P4 | ☐ |
-| ResourceQuota / LimitRange | P4 | ☐ |
-| PodDisruptionBudget | P4 | ☐ |
+| NetworkPolicy | P5 | ☑ |
+| SecurityContext | P5 | ☑ |
+| RBAC / ServiceAccount | P5 | ☐ |
+| Workload Identity | P5 | ☐ |
+| Sidecar container | P6 | ☐ |
+| ResourceQuota / LimitRange | P6 | ☐ |
+| PodDisruptionBudget | P6 | ☐ |
 | Resource requests/limits | P1 | ☑ |
 | Liveness/readiness probes | P1 | ☑ |
 | Rolling update strategy | P3 | ☑ |
@@ -113,18 +113,31 @@
 - [x] Configure rolling update strategy on Deployments
 - [ ] Verify full CI/CD: push code → auto-deploy → verify in browser
 
-## Phase 4: Advanced K8s + Notifications
-**Goal**: Production-hardened with advanced K8s features, daily digest notifications.
-**Verification**: HPA scales under load, NetworkPolicy blocks unauthorized traffic, daily digest arrives.
+## Phase 4: Scaling & Notifications
+**Goal**: Daily digest notifications, autoscaling under load.
+**Verification**: HPA scales under load, daily digest arrives in LINE/Slack.
 
-- [ ] Write daily digest CronJob (reads DB, sends to LINE/Slack)
-- [ ] Add HPA to backend and summarizer (CPU-based, then custom metrics)
-- [ ] Add NetworkPolicy (DB only accessible from backend/workers, Redis only from workers)
+- [x] Write daily digest CronJob (reads DB, sends to LINE/Slack)
+- [x] Add HPA to backend and summarizer (CPU-based, 70% target, 1-3 replicas)
+- [x] Fix skaffold.yaml for v4beta11 schema + cross-platform builds
+
+## Phase 5: Security Hardening
+**Goal**: Least-privilege at network, pod, and identity layers.
+**Verification**: NetworkPolicy blocks unauthorized traffic, pods run non-root, Workload Identity used for GCP access.
+
+- [x] Add NetworkPolicy (DB only accessible from backend/workers, Redis only from workers)
+- [x] Enable Calico + metrics-server via Terraform
+- [x] Add SecurityContext (non-root, read-only filesystem where possible)
+- [ ] Add RBAC / ServiceAccount (dedicated SAs per workload)
 - [ ] Configure Workload Identity for GCS access (optional: backup DB to GCS)
-- [ ] Add SecurityContext (non-root, read-only filesystem where possible)
+
+## Phase 6: Reliability & Observability
+**Goal**: Resource governance, availability guarantees, monitoring.
+**Verification**: ResourceQuota enforced, PDB prevents full disruption during node drain, metrics visible.
+
 - [ ] Add ResourceQuota / LimitRange on namespace
 - [ ] Add PodDisruptionBudget on backend
-- [ ] Add sidecar container (e.g., CloudSQL proxy pattern or metrics exporter)
+- [ ] Add sidecar container (e.g., metrics exporter)
 - [ ] Set up Prometheus + basic monitoring (stretch)
 
 ## Cost Budget

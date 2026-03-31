@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     gcp_project_id: str = ""
     gcp_location: str = "us-central1"
 
+    # Summarizer
+    summary_max_chars: int = 200
+
     # Digest notification
     digest_lookback_hours: int = 24
     digest_provider: str = ""  # "slack" | "line" | "" (disabled)

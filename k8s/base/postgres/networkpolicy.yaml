@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-allow-clients
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: feedforge
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: backend
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: summarizer
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: feed-fetcher
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: daily-digest
+      ports:
+        - protocol: TCP
+          port: 5432

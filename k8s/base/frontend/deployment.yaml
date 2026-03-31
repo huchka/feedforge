@@ -24,9 +24,18 @@ spec:
         app.kubernetes.io/component: web
         app.kubernetes.io/part-of: feedforge
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 102
       containers:
         - name: frontend
           image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/frontend:0.3.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           ports:
             - containerPort: 8080
               name: http
@@ -49,3 +58,13 @@ spec:
               port: 8080
             initialDelaySeconds: 3
             periodSeconds: 5
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /run
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
