@@ -35,13 +35,13 @@
 | PersistentVolumeClaim | P1 | ☑ |
 | Ingress | P3 | ☑ |
 | CronJob | P2 | ☑ |
-| Job | P4 | ☐ |
+| Job | P5 | ☑ |
 | HPA | P4 | ☑ |
 | Init container | P1 | ☑ |
 | NetworkPolicy | P5 | ☑ |
 | SecurityContext | P5 | ☑ |
-| RBAC / ServiceAccount | P5 | ☐ |
-| Workload Identity | P5 | ☐ |
+| RBAC / ServiceAccount | P5 | ☑ |
+| Workload Identity | P5 | ☑ |
 | Sidecar container | P6 | ☐ |
 | ResourceQuota / LimitRange | P6 | ☐ |
 | PodDisruptionBudget | P6 | ☐ |
@@ -128,8 +128,8 @@
 - [x] Add NetworkPolicy (DB only accessible from backend/workers, Redis only from workers)
 - [x] Enable Calico + metrics-server via Terraform
 - [x] Add SecurityContext (non-root, read-only filesystem where possible)
-- [ ] Add RBAC / ServiceAccount (dedicated SAs per workload)
-- [ ] Configure Workload Identity for GCS access (optional: backup DB to GCS)
+- [x] Add RBAC / ServiceAccount (dedicated SAs per workload, automountServiceAccountToken: false)
+- [x] Configure Workload Identity for GCS access (db-backup Job → GCS via WI)
 
 ## Phase 6: Reliability & Observability
 **Goal**: Resource governance, availability guarantees, monitoring.

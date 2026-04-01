@@ -6,6 +6,7 @@ provider "google" {
 module "iam" {
   source     = "../../modules/iam"
   project_id = var.project_id
+  region     = var.region
 }
 
 module "network" {
@@ -39,6 +40,15 @@ module "cloud_armor" {
   source      = "../../modules/cloud-armor"
   project_id  = var.project_id
   allowed_ips = var.allowed_ips
+}
+
+# Workload Identity binding — must run after GKE (creates the WI pool)
+resource "google_service_account_iam_member" "db_backup_workload_identity" {
+  service_account_id = module.iam.db_backup_sa_name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[feedforge/db-backup]"
+
+  depends_on = [module.gke]
 }
 
 module "cloud_build" {

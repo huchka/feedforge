@@ -45,3 +45,36 @@ resource "google_project_iam_member" "cloud_build_roles" {
   role    = each.value
   member  = "serviceAccount:${google_service_account.cloud_build.email}"
 }
+
+# --- DB Backup (Workload Identity) ---
+
+resource "google_service_account" "db_backup" {
+  account_id   = "feedforge-db-backup"
+  display_name = "FeedForge DB Backup Service Account"
+  project      = var.project_id
+}
+
+resource "google_storage_bucket" "db_backup" {
+  name     = "feedforge-db-backup-${var.project_id}"
+  project  = var.project_id
+  location = var.region
+
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
+
+  lifecycle_rule {
+    condition {
+      age = 7
+    }
+    action {
+      type = "Delete"
+    }
+  }
+}
+
+resource "google_storage_bucket_iam_member" "db_backup_writer" {
+  bucket = google_storage_bucket.db_backup.name
+  role   = "roles/storage.objectCreator"
+  member = "serviceAccount:${google_service_account.db_backup.email}"
+}
+

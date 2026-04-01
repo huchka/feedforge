@@ -23,6 +23,7 @@ spec:
             app.kubernetes.io/component: worker
             app.kubernetes.io/part-of: feedforge
         spec:
+          serviceAccountName: feed-fetcher
           restartPolicy: Never
           securityContext:
             runAsNonRoot: true
