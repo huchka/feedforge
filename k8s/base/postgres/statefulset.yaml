@@ -24,6 +24,24 @@ spec:
         runAsNonRoot: true
         runAsUser: 70
         fsGroup: 70
+      initContainers:
+        - name: init-permissions
+          image: postgres:16.6-alpine
+          command: ["sh", "-c", "mkdir -p /data/pgdata && chown 70:70 /data/pgdata && chmod 700 /data/pgdata"]
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
       containers:
         - name: postgres
           image: postgres:16.6-alpine

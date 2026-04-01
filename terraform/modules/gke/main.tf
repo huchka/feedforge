@@ -25,6 +25,8 @@ resource "google_container_cluster" "primary" {
     }
   }
 
+  datapath_provider = "ADVANCED_DATAPATH"
+
   addons_config {
     http_load_balancing {
       disabled = false
@@ -32,11 +34,6 @@ resource "google_container_cluster" "primary" {
     horizontal_pod_autoscaling {
       disabled = false
     }
-  }
-
-  network_policy {
-    enabled  = true
-    provider = "CALICO"
   }
 
   deletion_protection = false
@@ -78,5 +75,9 @@ resource "google_container_node_pool" "primary" {
   management {
     auto_repair  = true
     auto_upgrade = true
+  }
+
+  lifecycle {
+    replace_triggered_by = [google_container_cluster.primary.id]
   }
 }

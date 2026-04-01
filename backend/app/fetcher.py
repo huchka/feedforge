@@ -1,6 +1,7 @@
 """Feed fetcher — parses RSS/Atom feeds, inserts new articles, queues for summarization."""
 
 import logging
+import socket
 import time
 from datetime import UTC, datetime, timedelta
 
@@ -130,6 +131,7 @@ def main() -> None:
     )
 
     logger.info("Feed fetcher starting")
+    socket.setdefaulttimeout(30)
     start = time.monotonic()
 
     db = SessionLocal()

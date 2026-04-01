@@ -31,7 +31,7 @@ spec:
       terminationGracePeriodSeconds: 45
       containers:
         - name: summarizer
-          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:0.2.1
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:0.2.2
           command: ["python", "-m", "app.summarizer"]
           securityContext:
             allowPrivilegeEscalation: false
