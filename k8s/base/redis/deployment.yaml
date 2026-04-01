@@ -19,6 +19,7 @@ spec:
         app.kubernetes.io/component: queue
         app.kubernetes.io/part-of: feedforge
     spec:
+      serviceAccountName: redis
       securityContext:
         runAsNonRoot: true
         runAsUser: 999

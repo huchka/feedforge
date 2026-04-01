@@ -8,21 +8,31 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - postgres/serviceaccount.yaml
   - postgres/service.yaml
   - postgres/statefulset.yaml
   - postgres/networkpolicy.yaml
+  - redis/serviceaccount.yaml
   - redis/deployment.yaml
   - redis/service.yaml
   - redis/networkpolicy.yaml
+  - backend/serviceaccount.yaml
   - backend/configmap.yaml
   - backend/service.yaml
   - backend/deployment.yaml
   - backend/hpa.yaml
+  - frontend/serviceaccount.yaml
   - frontend/service.yaml
   - frontend/deployment.yaml
   - ingress/ingress.yaml
   - ingress/backend-config.yaml
+  - fetcher/serviceaccount.yaml
   - fetcher/cronjob.yaml
+  - summarizer/serviceaccount.yaml
   - summarizer/deployment.yaml
   - summarizer/hpa.yaml
+  - digest/serviceaccount.yaml
   - digest/cronjob.yaml
+  - backup/serviceaccount.yaml
+  - backup/configmap.yaml
+  - backup/job.yaml

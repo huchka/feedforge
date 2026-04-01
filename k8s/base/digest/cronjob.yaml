@@ -23,6 +23,7 @@ spec:
             app.kubernetes.io/component: worker
             app.kubernetes.io/part-of: feedforge
         spec:
+          serviceAccountName: daily-digest
           restartPolicy: Never
           securityContext:
             runAsNonRoot: true

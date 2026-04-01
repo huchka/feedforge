@@ -27,6 +27,10 @@ resource "google_container_cluster" "primary" {
 
   datapath_provider = "ADVANCED_DATAPATH"
 
+  workload_identity_config {
+    workload_pool = "${var.project_id}.svc.id.goog"
+  }
+
   addons_config {
     http_load_balancing {
       disabled = false
@@ -57,6 +61,10 @@ resource "google_container_node_pool" "primary" {
     disk_size_gb    = var.disk_size_gb
     disk_type       = var.disk_type
     service_account = var.node_service_account
+
+    workload_metadata_config {
+      mode = "GKE_METADATA"
+    }
 
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform",
