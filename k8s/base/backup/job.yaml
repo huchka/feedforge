@@ -29,7 +29,7 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-              set -e
+              set -eo pipefail
               TIMESTAMP=$(date +%Y%m%d-%H%M%S)
               OBJECT="feedforge-${TIMESTAMP}.sql.gz"
               pg_dump -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" --no-password | gzip > /tmp/backup.sql.gz

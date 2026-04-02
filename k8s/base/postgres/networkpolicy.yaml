@@ -27,6 +27,9 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: daily-digest
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: db-backup
       ports:
         - protocol: TCP
           port: 5432
