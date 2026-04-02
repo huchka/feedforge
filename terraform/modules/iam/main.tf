@@ -78,3 +78,17 @@ resource "google_storage_bucket_iam_member" "db_backup_writer" {
   member = "serviceAccount:${google_service_account.db_backup.email}"
 }
 
+# --- Summarizer (Workload Identity) ---
+
+resource "google_service_account" "summarizer" {
+  account_id   = "feedforge-summarizer"
+  display_name = "FeedForge Summarizer Service Account"
+  project      = var.project_id
+}
+
+resource "google_project_iam_member" "summarizer_aiplatform" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.summarizer.email}"
+}
+

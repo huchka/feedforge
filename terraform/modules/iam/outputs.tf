@@ -17,3 +17,11 @@ output "db_backup_sa_name" {
 output "db_backup_bucket_name" {
   value = google_storage_bucket.db_backup.name
 }
+
+output "summarizer_sa_email" {
+  value = google_service_account.summarizer.email
+}
+
+output "summarizer_sa_name" {
+  value = google_service_account.summarizer.name
+}

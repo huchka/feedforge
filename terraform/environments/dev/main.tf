@@ -51,6 +51,14 @@ resource "google_service_account_iam_member" "db_backup_workload_identity" {
   depends_on = [module.gke]
 }
 
+resource "google_service_account_iam_member" "summarizer_workload_identity" {
+  service_account_id = module.iam.summarizer_sa_name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[feedforge/summarizer]"
+
+  depends_on = [module.gke]
+}
+
 module "cloud_build" {
   source                = "../../modules/cloud-build"
   project_id            = var.project_id
