@@ -40,6 +40,14 @@ resource "google_container_cluster" "primary" {
     }
   }
 
+  maintenance_policy {
+    recurring_window {
+      start_time = var.maintenance_start_time
+      end_time   = var.maintenance_end_time
+      recurrence = var.maintenance_recurrence
+    }
+  }
+
   deletion_protection = false
 }
 
@@ -85,7 +93,13 @@ resource "google_container_node_pool" "primary" {
     auto_upgrade = true
   }
 
+  upgrade_settings {
+    max_surge       = 1
+    max_unavailable = 0
+  }
+
   lifecycle {
+    ignore_changes       = [node_count]
     replace_triggered_by = [google_container_cluster.primary.id]
   }
 }

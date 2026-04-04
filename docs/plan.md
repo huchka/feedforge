@@ -42,9 +42,11 @@
 | SecurityContext | P5 | ☑ |
 | RBAC / ServiceAccount | P5 | ☑ |
 | Workload Identity | P5 | ☑ |
-| Sidecar container | P6 | ☐ |
-| ResourceQuota / LimitRange | P6 | ☐ |
-| PodDisruptionBudget | P6 | ☐ |
+| Sidecar container | P6 | ☑ |
+| ResourceQuota / LimitRange | P6 | ☑ |
+| PodDisruptionBudget | P6 | ☑ |
+| Maintenance window | P6 | ☑ |
+| Surge upgrade strategy | P6 | ☑ |
 | Resource requests/limits | P1 | ☑ |
 | Liveness/readiness probes | P1 | ☑ |
 | Rolling update strategy | P3 | ☑ |
@@ -135,9 +137,12 @@
 **Goal**: Resource governance, availability guarantees, monitoring.
 **Verification**: ResourceQuota enforced, PDB prevents full disruption during node drain, metrics visible.
 
-- [ ] Add ResourceQuota / LimitRange on namespace
-- [ ] Add PodDisruptionBudget on backend
-- [ ] Add sidecar container (e.g., metrics exporter)
+- [x] Add ResourceQuota / LimitRange on namespace
+- [x] Add PodDisruptionBudget on backend, frontend, summarizer
+- [x] Add sidecar container (log-exporter on backend)
+- [x] Add GKE maintenance window (daily 02:00–06:00 UTC via Terraform)
+- [x] Add surge upgrade strategy (max_surge=1, max_unavailable=0)
+- [x] Upgrade node machine type to e2-standard-2
 - [ ] Set up Prometheus + basic monitoring (stretch)
 
 ## Cost Budget
@@ -147,12 +152,12 @@
 | Resource | Monthly Estimate |
 |----------|-----------------|
 | GKE cluster management (zonal) | $0 (free tier) |
-| 2× e2-medium nodes (2 vCPU, 4GB) | ~$49 |
+| 2× e2-standard-2 nodes (2 vCPU, 8GB) | ~$97 |
 | Persistent disk 20GB (SSD) | ~$3.40 |
 | Artifact Registry storage | ~$1-2 |
 | Cloud Build | ~$0 (free tier) |
 | Network egress | ~$1-2 |
-| **Total** | **~$55/month** |
+| **Total** | **~$103/month** |
 
 **Budget rules**:
 - $300 credit / 88 days ≈ $3.40/day budget

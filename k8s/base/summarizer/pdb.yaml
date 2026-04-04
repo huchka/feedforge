@@ -1,0 +1,14 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: summarizer
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: summarizer
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: feedforge
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: summarizer
