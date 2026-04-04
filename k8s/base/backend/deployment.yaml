@@ -31,7 +31,7 @@ spec:
         runAsGroup: 999
       initContainers:
         - name: run-migrations
-          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:0.2.2
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-5-rbac-wi-2-g1369e4e
           command: ["alembic", "upgrade", "head"]
           securityContext:
             allowPrivilegeEscalation: false
@@ -59,9 +59,33 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
+        - name: log-exporter
+          image: busybox:1.37
+          restartPolicy: Always
+          command: ["sh", "-c"]
+          args:
+            - touch /var/log/app/access.log && tail -f /var/log/app/access.log
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+          volumeMounts:
+            - name: app-logs
+              mountPath: /var/log/app
       containers:
         - name: backend
-          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:0.2.2
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-5-rbac-wi-2-g1369e4e
+          command: ["sh", "-c"]
+          args:
+            - uvicorn app.main:app --host 0.0.0.0 --port 8000 2>&1 | tee /var/log/app/access.log
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -91,6 +115,9 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
+          volumeMounts:
+            - name: app-logs
+              mountPath: /var/log/app
           livenessProbe:
             httpGet:
               path: /api/health
@@ -105,3 +132,6 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
             failureThreshold: 3
+      volumes:
+        - name: app-logs
+          emptyDir: {}

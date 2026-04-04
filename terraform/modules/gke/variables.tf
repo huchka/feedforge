@@ -40,7 +40,7 @@ variable "services_range_name" {
 
 variable "machine_type" {
   type    = string
-  default = "e2-medium"
+  default = "e2-standard-2"
 }
 
 variable "disk_size_gb" {
@@ -65,7 +65,7 @@ variable "min_node_count" {
 
 variable "max_node_count" {
   type    = number
-  default = 3
+  default = 4
 }
 
 variable "node_service_account" {
@@ -76,4 +76,22 @@ variable "node_service_account" {
 variable "environment" {
   type        = string
   description = "Environment name (e.g. dev, staging, prod)"
+}
+
+variable "maintenance_start_time" {
+  type        = string
+  description = "Maintenance window start time (RFC 3339)"
+  default     = "2026-01-01T02:00:00Z"
+}
+
+variable "maintenance_end_time" {
+  type        = string
+  description = "Maintenance window end time (RFC 3339)"
+  default     = "2026-01-01T06:00:00Z"
+}
+
+variable "maintenance_recurrence" {
+  type        = string
+  description = "Maintenance window recurrence (RFC 5545 RRULE)"
+  default     = "FREQ=DAILY"
 }

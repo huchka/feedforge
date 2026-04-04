@@ -8,6 +8,8 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - namespace-quota.yaml
+  - namespace-limitrange.yaml
   - postgres/serviceaccount.yaml
   - postgres/service.yaml
   - postgres/statefulset.yaml
@@ -21,9 +23,11 @@ resources:
   - backend/service.yaml
   - backend/deployment.yaml
   - backend/hpa.yaml
+  - backend/pdb.yaml
   - frontend/serviceaccount.yaml
   - frontend/service.yaml
   - frontend/deployment.yaml
+  - frontend/pdb.yaml
   - ingress/ingress.yaml
   - ingress/backend-config.yaml
   - fetcher/serviceaccount.yaml
@@ -31,6 +35,7 @@ resources:
   - summarizer/serviceaccount.yaml
   - summarizer/deployment.yaml
   - summarizer/hpa.yaml
+  - summarizer/pdb.yaml
   - digest/serviceaccount.yaml
   - digest/cronjob.yaml
   - backup/serviceaccount.yaml
