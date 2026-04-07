@@ -110,3 +110,104 @@ data:
       "title": "FeedForge Backend",
       "uid": "feedforge-backend"
     }
+  feedforge-pipeline.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": false,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "title": "Feeds",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_feeds_total", "legendFormat": "total" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "title": "Active Feeds",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_feeds_active", "legendFormat": "active" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "title": "Articles Fetched",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_articles_total", "legendFormat": "fetched" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "title": "Articles Summarized",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_articles_summarized", "legendFormat": "summarized" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "title": "Redis Queue Length",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_queue_length", "legendFormat": "pending articles" }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0,
+              "custom": { "drawStyle": "line", "fillOpacity": 20 }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Digest Sent",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_articles_digest_sent", "legendFormat": "sent" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "title": "Pipeline Overview",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_articles_total", "legendFormat": "fetched" },
+            { "expr": "feedforge_articles_summarized", "legendFormat": "summarized" },
+            { "expr": "feedforge_articles_digest_sent", "legendFormat": "digest sent" }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0,
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            },
+            "overrides": []
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["feedforge"],
+      "templating": { "list": [] },
+      "time": { "from": "now-6h", "to": "now" },
+      "title": "FeedForge Pipeline",
+      "uid": "feedforge-pipeline"
+    }
