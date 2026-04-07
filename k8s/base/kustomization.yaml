@@ -52,3 +52,10 @@ resources:
   - grafana/configmap-dashboard.yaml
   - grafana/deployment.yaml
   - grafana/service.yaml
+  - prometheus-adapter/serviceaccount.yaml
+  - prometheus-adapter/configmap.yaml
+  - prometheus-adapter/deployment.yaml
+  - prometheus-adapter/service.yaml
+  - prometheus-adapter/clusterroles.yaml
+  - prometheus-adapter/apiservice.yaml
+  - prometheus-adapter/networkpolicy.yaml

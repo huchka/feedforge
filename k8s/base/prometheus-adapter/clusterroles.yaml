@@ -1,0 +1,75 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-adapter:system:auth-delegator
+  labels:
+    app.kubernetes.io/name: prometheus-adapter
+    app.kubernetes.io/part-of: feedforge
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-adapter
+    namespace: feedforge
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-adapter-resource-reader
+  labels:
+    app.kubernetes.io/name: prometheus-adapter
+    app.kubernetes.io/part-of: feedforge
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "namespaces"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-adapter:resource-reader
+  labels:
+    app.kubernetes.io/name: prometheus-adapter
+    app.kubernetes.io/part-of: feedforge
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-adapter-resource-reader
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-adapter
+    namespace: feedforge
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-adapter-custom-metrics-server
+  labels:
+    app.kubernetes.io/name: prometheus-adapter
+    app.kubernetes.io/part-of: feedforge
+rules:
+  - apiGroups: ["custom.metrics.k8s.io"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["external.metrics.k8s.io"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-adapter:custom-metrics-server
+  labels:
+    app.kubernetes.io/name: prometheus-adapter
+    app.kubernetes.io/part-of: feedforge
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-adapter-custom-metrics-server
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-adapter
+    namespace: feedforge
