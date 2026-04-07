@@ -7,8 +7,8 @@ metadata:
     app.kubernetes.io/part-of: feedforge
 spec:
   hard:
-    requests.cpu: "1"
-    requests.memory: 1536Mi
-    limits.cpu: "3"
-    limits.memory: 2560Mi
-    pods: "15"
+    requests.cpu: "2"
+    requests.memory: 2048Mi
+    limits.cpu: "6"
+    limits.memory: 4096Mi
+    pods: "25"

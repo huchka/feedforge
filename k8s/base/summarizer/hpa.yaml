@@ -15,12 +15,13 @@ spec:
   minReplicas: 1
   maxReplicas: 2
   metrics:
-    - type: Resource
-      resource:
-        name: cpu
+    - type: External
+      external:
+        metric:
+          name: feedforge_queue_length
         target:
-          type: Utilization
-          averageUtilization: 70
+          type: Value
+          value: "20"
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 300

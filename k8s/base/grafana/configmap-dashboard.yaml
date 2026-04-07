@@ -1,0 +1,213 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: feedforge
+data:
+  feedforge-backend.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": false,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "title": "Request Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "sum(rate(feedforge_http_requests_total[5m])) by (status_code)",
+              "legendFormat": "{{status_code}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Request Latency (p50 / p95 / p99)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(feedforge_http_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p50"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(feedforge_http_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p95"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(feedforge_http_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p99"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Requests In Progress",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "sum(feedforge_http_requests_in_progress) by (method)",
+              "legendFormat": "{{method}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Error Rate (5xx)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "sum(rate(feedforge_http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(feedforge_http_requests_total[5m]))",
+              "legendFormat": "error ratio"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "custom": { "drawStyle": "line", "fillOpacity": 10 },
+              "max": 1,
+              "min": 0
+            },
+            "overrides": []
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["feedforge"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "FeedForge Backend",
+      "uid": "feedforge-backend"
+    }
+  feedforge-pipeline.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": false,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "title": "Feeds",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_feeds_total", "legendFormat": "total" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "title": "Active Feeds",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_feeds_active", "legendFormat": "active" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "title": "Articles Fetched",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_articles_total", "legendFormat": "fetched" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "title": "Articles Summarized",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_articles_summarized", "legendFormat": "summarized" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "title": "Redis Queue Length",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_queue_length", "legendFormat": "pending articles" }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0,
+              "custom": { "drawStyle": "line", "fillOpacity": 20 }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Digest Sent",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_articles_digest_sent", "legendFormat": "sent" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "title": "Pipeline Overview",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            { "expr": "feedforge_articles_total", "legendFormat": "fetched" },
+            { "expr": "feedforge_articles_summarized", "legendFormat": "summarized" },
+            { "expr": "feedforge_articles_digest_sent", "legendFormat": "digest sent" }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0,
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            },
+            "overrides": []
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["feedforge"],
+      "templating": { "list": [] },
+      "time": { "from": "now-6h", "to": "now" },
+      "title": "FeedForge Pipeline",
+      "uid": "feedforge-pipeline"
+    }

@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prometheus-adapter-allow-apiserver
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: prometheus-adapter
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: feedforge
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-adapter
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 6443

@@ -1,0 +1,19 @@
+# Apply separately — this targets kube-system namespace and cannot go through
+# the feedforge kustomization:
+#   kubectl apply -f k8s/base/prometheus-adapter/rolebinding-kube-system.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-adapter:extension-apiserver-authentication-reader
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: prometheus-adapter
+    app.kubernetes.io/part-of: feedforge
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-adapter
+    namespace: feedforge

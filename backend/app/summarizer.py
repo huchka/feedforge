@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 QUEUE_KEY = "feedforge:articles:pending"
 BRPOP_TIMEOUT = 30
+REQUEST_DELAY = 1.0
+MAX_RETRIES = 5
 
 SYSTEM_PROMPT = (
     "You are a concise article summarizer. "
@@ -68,35 +70,49 @@ def summarize_article(article: Article, client: genai.Client) -> str | None:
     user_message = f"Title: {article.title}\n\nContent:\n{content}"
     system_prompt = SYSTEM_PROMPT.format(max_chars=max_chars)
 
-    try:
-        response = client.models.generate_content(
-            model=settings.llm_model,
-            contents=user_message,
-            config=genai.types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                max_output_tokens=256,
-                temperature=0.3,
-                thinking_config=genai.types.ThinkingConfig(thinking_budget=0),
-            ),
-        )
-        summary = response.text
-        if len(summary) > max_chars:
-            logger.warning(
-                "Summary for article %s exceeded %d chars (%d), truncating",
-                article.id, max_chars, len(summary),
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = client.models.generate_content(
+                model=settings.llm_model,
+                contents=user_message,
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    max_output_tokens=256,
+                    temperature=0.3,
+                    thinking_config=genai.types.ThinkingConfig(thinking_budget=0),
+                ),
             )
-            last_period = summary.rfind(".", 0, max_chars)
-            summary = summary[:last_period + 1] if last_period > 0 else summary[:max_chars]
-        return summary
-    except Exception:
-        logger.exception("Gemini API error for article %s", article.id)
-        return None
+            summary = response.text
+            if len(summary) > max_chars:
+                logger.warning(
+                    "Summary for article %s exceeded %d chars (%d), truncating",
+                    article.id, max_chars, len(summary),
+                )
+                last_period = summary.rfind(".", 0, max_chars)
+                summary = summary[:last_period + 1] if last_period > 0 else summary[:max_chars]
+            return summary
+        except genai.errors.ClientError as exc:
+            if exc.status_code == 429 and attempt < MAX_RETRIES - 1:
+                wait = 2 ** attempt
+                logger.warning("Rate limited on article %s, retrying in %ds (attempt %d/%d)",
+                               article.id, wait, attempt + 1, MAX_RETRIES)
+                time.sleep(wait)
+                continue
+            logger.exception("Gemini API error for article %s", article.id)
+            return None
+        except Exception:
+            logger.exception("Gemini API error for article %s", article.id)
+            return None
 
 
-def backfill_unsummarized(db, redis_client: redis.Redis) -> int:
+def backfill_unsummarized(redis_client: redis.Redis) -> int:
     """Push IDs of articles missing summaries to the Redis queue."""
-    stmt = select(Article.id).where(Article.summary.is_(None))
-    article_ids = list(db.scalars(stmt).all())
+    db = SessionLocal()
+    try:
+        stmt = select(Article.id).where(Article.summary.is_(None))
+        article_ids = list(db.scalars(stmt).all())
+    finally:
+        db.close()
 
     if not article_ids:
         return 0
@@ -108,7 +124,7 @@ def backfill_unsummarized(db, redis_client: redis.Redis) -> int:
     return len(article_ids)
 
 
-def process_one(article_id_str: str, db, client: genai.Client) -> bool:
+def process_one(article_id_str: str, client: genai.Client) -> bool:
     """Fetch article, summarize, and write back. Returns True on success."""
     try:
         article_id = uuid.UUID(article_id_str)
@@ -116,23 +132,30 @@ def process_one(article_id_str: str, db, client: genai.Client) -> bool:
         logger.warning("Invalid article ID in queue: %s", article_id_str)
         return False
 
-    article = db.get(Article, article_id)
-    if article is None:
-        logger.debug("Article %s not found (deleted?), skipping", article_id)
-        return False
+    db = SessionLocal()
+    try:
+        article = db.get(Article, article_id)
+        if article is None:
+            logger.debug("Article %s not found (deleted?), skipping", article_id)
+            return False
 
-    if article.summary is not None:
-        logger.debug("Article %s already summarized, skipping", article_id)
+        if article.summary is not None:
+            logger.debug("Article %s already summarized, skipping", article_id)
+            return True
+
+        summary = summarize_article(article, client)
+        if summary is None:
+            return False
+
+        article.summary = summary
+        db.commit()
+        logger.info("Summarized article %s: %s", article.id, article.title[:80])
         return True
-
-    summary = summarize_article(article, client)
-    if summary is None:
-        return False
-
-    article.summary = summary
-    db.commit()
-    logger.info("Summarized article %s: %s", article.id, article.title[:80])
-    return True
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 
 def main() -> None:
@@ -153,34 +176,30 @@ def main() -> None:
     client = get_llm_client()
     logger.info("Vertex AI client ready (project=%s, location=%s)", settings.gcp_project_id, settings.gcp_location)
 
-    db = SessionLocal()
-    try:
-        backfill_unsummarized(db, redis_client)
+    backfill_unsummarized(redis_client)
 
-        processed = 0
-        errors = 0
-        start = time.monotonic()
+    processed = 0
+    errors = 0
+    start = time.monotonic()
 
-        while not _shutdown:
-            result = redis_client.brpop(QUEUE_KEY, timeout=BRPOP_TIMEOUT)
-            if result is None:
-                continue
+    while not _shutdown:
+        result = redis_client.brpop(QUEUE_KEY, timeout=BRPOP_TIMEOUT)
+        if result is None:
+            continue
 
-            _, article_id_str = result
-            try:
-                if process_one(article_id_str, db, client):
-                    processed += 1
-                else:
-                    errors += 1
-            except Exception:
-                logger.exception("Unexpected error processing article %s", article_id_str)
-                db.rollback()
+        _, article_id_str = result
+        try:
+            if process_one(article_id_str, client):
+                processed += 1
+            else:
                 errors += 1
+        except Exception:
+            logger.exception("Unexpected error processing article %s", article_id_str)
+            errors += 1
+        time.sleep(REQUEST_DELAY)
 
-        elapsed = time.monotonic() - start
-        logger.info("Summarizer shutting down: %d processed, %d errors (%.1fs)", processed, errors, elapsed)
-    finally:
-        db.close()
+    elapsed = time.monotonic() - start
+    logger.info("Summarizer shutting down: %d processed, %d errors (%.1fs)", processed, errors, elapsed)
 
 
 if __name__ == "__main__":

@@ -41,3 +41,21 @@ resources:
   - backup/serviceaccount.yaml
   - backup/configmap.yaml
   - backup/job.yaml
+  - prometheus/serviceaccount.yaml
+  - prometheus/configmap.yaml
+  - prometheus/deployment.yaml
+  - prometheus/service.yaml
+  - prometheus/networkpolicy.yaml
+  - grafana/serviceaccount.yaml
+  - grafana/configmap-datasource.yaml
+  - grafana/configmap-dashboard-provider.yaml
+  - grafana/configmap-dashboard.yaml
+  - grafana/deployment.yaml
+  - grafana/service.yaml
+  - prometheus-adapter/serviceaccount.yaml
+  - prometheus-adapter/configmap.yaml
+  - prometheus-adapter/deployment.yaml
+  - prometheus-adapter/service.yaml
+  - prometheus-adapter/clusterroles.yaml
+  - prometheus-adapter/apiservice.yaml
+  - prometheus-adapter/networkpolicy.yaml

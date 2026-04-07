@@ -68,7 +68,7 @@
 - [x] `gcloud container clusters get-credentials` → verify kubectl access
 - [x] Deploy nginx pod + LoadBalancer Service manually
 - [x] Verify external access
-- [ ] `terraform destroy` (keeping cluster running, ~$2/day)
+- [x] `terraform destroy` (keeping cluster running, ~$2/day)
 
 ## Phase 1: Core Application (Backend + DB)
 **Goal**: FastAPI backend + PostgreSQL running in cluster, CRUD for feeds and articles working.
@@ -113,7 +113,7 @@
 - [x] Set up Cloud Build trigger on GitHub push to main (Terraform module)
 - [x] Write skaffold.yaml for local dev loop
 - [x] Configure rolling update strategy on Deployments
-- [ ] Verify full CI/CD: push code → auto-deploy → verify in browser
+- [x] Verify full CI/CD: push code → auto-deploy → verify in browser
 
 ## Phase 4: Scaling & Notifications
 **Goal**: Daily digest notifications, autoscaling under load.
@@ -143,7 +143,7 @@
 - [x] Add GKE maintenance window (daily 02:00–06:00 UTC via Terraform)
 - [x] Add surge upgrade strategy (max_surge=1, max_unavailable=0)
 - [x] Upgrade node machine type to e2-standard-2
-- [ ] Set up Prometheus + basic monitoring (stretch)
+- [x] Set up Prometheus + basic monitoring (stretch)
 
 ## Cost Budget
 
