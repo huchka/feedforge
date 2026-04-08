@@ -31,7 +31,7 @@ spec:
         runAsGroup: 999
       initContainers:
         - name: run-migrations
-          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-5-rbac-wi-2-g1369e4e
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-6-monitoring
           command: ["alembic", "upgrade", "head"]
           securityContext:
             allowPrivilegeEscalation: false
@@ -82,7 +82,7 @@ spec:
               mountPath: /var/log/app
       containers:
         - name: backend
-          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-5-rbac-wi-2-g1369e4e
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-6-monitoring
           command: ["sh", "-c"]
           args:
             - uvicorn app.main:app --host 0.0.0.0 --port 8000 2>&1 | tee /var/log/app/access.log
