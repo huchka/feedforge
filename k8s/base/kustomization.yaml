@@ -61,3 +61,10 @@ resources:
   - prometheus-adapter/clusterroles.yaml
   - prometheus-adapter/apiservice.yaml
   - prometheus-adapter/networkpolicy.yaml
+  - kube-state-metrics/serviceaccount.yaml
+  - kube-state-metrics/clusterroles.yaml
+  - kube-state-metrics/deployment.yaml
+  - kube-state-metrics/service.yaml
+  - kube-state-metrics/networkpolicy.yaml
+  - prometheus/clusterroles.yaml
+  - grafana/configmap-dashboard-cluster.yaml
