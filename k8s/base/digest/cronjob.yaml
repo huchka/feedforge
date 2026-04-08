@@ -31,7 +31,7 @@ spec:
             runAsGroup: 999
           containers:
             - name: digest
-              image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-5-rbac-wi-2-g1369e4e
+              image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-6-monitoring
               command: ["python", "-m", "app.digest"]
               securityContext:
                 allowPrivilegeEscalation: false
@@ -77,5 +77,5 @@ spec:
                   cpu: 50m
                   memory: 64Mi
                 limits:
-                  cpu: 200m
+                  cpu: 100m
                   memory: 128Mi

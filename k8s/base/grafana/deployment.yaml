@@ -50,7 +50,7 @@ spec:
               cpu: 50m
               memory: 64Mi
             limits:
-              cpu: 200m
+              cpu: 100m
               memory: 128Mi
           livenessProbe:
             httpGet:
@@ -74,6 +74,9 @@ spec:
             - name: dashboards
               mountPath: /etc/grafana/dashboards
               readOnly: true
+            - name: dashboards-cluster
+              mountPath: /etc/grafana/dashboards/cluster
+              readOnly: true
             - name: grafana-data
               mountPath: /var/lib/grafana
             - name: grafana-tmp
@@ -88,6 +91,9 @@ spec:
         - name: dashboards
           configMap:
             name: grafana-dashboards
+        - name: dashboards-cluster
+          configMap:
+            name: grafana-dashboards-cluster
         - name: grafana-data
           emptyDir: {}
         - name: grafana-tmp

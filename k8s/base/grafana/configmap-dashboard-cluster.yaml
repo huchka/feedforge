@@ -1,0 +1,250 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-cluster
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: feedforge
+data:
+  gke-cluster.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": false,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "title": "Node Count",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})",
+              "legendFormat": ""
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Pod Count",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "count(kube_pod_info{namespace=\"feedforge\"})",
+              "legendFormat": ""
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Node CPU Usage",
+          "type": "gauge",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{id=\"/\"}[5m])) / sum(machine_cpu_cores)",
+              "legendFormat": ""
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 0.7 },
+                  { "color": "red", "value": 0.9 }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Node Memory Usage",
+          "type": "gauge",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{id=\"/\"}) / sum(machine_memory_bytes)",
+              "legendFormat": ""
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 0.7 },
+                  { "color": "red", "value": 0.9 }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Top Pods by CPU",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(container_cpu_usage_seconds_total{namespace=\"feedforge\", container!=\"\", container!=\"POD\"}[5m])) by (pod))",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Top Pods by Memory",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "topk(10, sum(container_memory_working_set_bytes{namespace=\"feedforge\", container!=\"\", container!=\"POD\"}) by (pod))",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Pod Restart Counts",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "sum(kube_pod_container_status_restarts_total{namespace=\"feedforge\"}) by (pod, container) > 0",
+              "legendFormat": "",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": { "Time": true },
+                "renameByName": { "pod": "Pod", "container": "Container", "Value": "Restarts" }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          }
+        },
+        {
+          "title": "Namespace CPU: Requests vs Quota",
+          "type": "gauge",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "sum(kube_pod_container_resource_requests{namespace=\"feedforge\", resource=\"cpu\"}) / scalar(kube_resourcequota{namespace=\"feedforge\", resource=\"requests.cpu\", type=\"hard\"})",
+              "legendFormat": ""
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 0.7 },
+                  { "color": "red", "value": 0.9 }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Namespace Memory: Requests vs Quota",
+          "type": "gauge",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "" },
+          "targets": [
+            {
+              "expr": "sum(kube_pod_container_resource_requests{namespace=\"feedforge\", resource=\"memory\"}) / scalar(kube_resourcequota{namespace=\"feedforge\", resource=\"requests.memory\", type=\"hard\"})",
+              "legendFormat": ""
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 0.7 },
+                  { "color": "red", "value": 0.9 }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["feedforge", "gke", "cluster"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "GKE Cluster",
+      "uid": "feedforge-gke-cluster"
+    }

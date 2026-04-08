@@ -28,8 +28,10 @@ resources:
   - frontend/service.yaml
   - frontend/deployment.yaml
   - frontend/pdb.yaml
-  - ingress/ingress.yaml
-  - ingress/backend-config.yaml
+  - gateway/gateway.yaml
+  - gateway/httproute.yaml
+  - gateway/backend-policy.yaml
+  - gateway/healthcheck-policy.yaml
   - fetcher/serviceaccount.yaml
   - fetcher/cronjob.yaml
   - summarizer/serviceaccount.yaml
@@ -59,3 +61,10 @@ resources:
   - prometheus-adapter/clusterroles.yaml
   - prometheus-adapter/apiservice.yaml
   - prometheus-adapter/networkpolicy.yaml
+  - kube-state-metrics/serviceaccount.yaml
+  - kube-state-metrics/clusterroles.yaml
+  - kube-state-metrics/deployment.yaml
+  - kube-state-metrics/service.yaml
+  - kube-state-metrics/networkpolicy.yaml
+  - prometheus/clusterroles.yaml
+  - grafana/configmap-dashboard-cluster.yaml

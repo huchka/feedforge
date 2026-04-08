@@ -31,7 +31,7 @@ spec:
         runAsGroup: 999
       initContainers:
         - name: run-migrations
-          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-5-rbac-wi-2-g1369e4e
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-6-monitoring
           command: ["alembic", "upgrade", "head"]
           securityContext:
             allowPrivilegeEscalation: false
@@ -57,7 +57,7 @@ spec:
               cpu: 50m
               memory: 64Mi
             limits:
-              cpu: 200m
+              cpu: 100m
               memory: 128Mi
         - name: log-exporter
           image: busybox:1.37
@@ -75,14 +75,14 @@ spec:
               cpu: 10m
               memory: 16Mi
             limits:
-              cpu: 50m
+              cpu: 20m
               memory: 32Mi
           volumeMounts:
             - name: app-logs
               mountPath: /var/log/app
       containers:
         - name: backend
-          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-5-rbac-wi-2-g1369e4e
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-6-monitoring
           command: ["sh", "-c"]
           args:
             - uvicorn app.main:app --host 0.0.0.0 --port 8000 2>&1 | tee /var/log/app/access.log
@@ -113,7 +113,7 @@ spec:
               cpu: 100m
               memory: 128Mi
             limits:
-              cpu: 500m
+              cpu: 200m
               memory: 256Mi
           volumeMounts:
             - name: app-logs

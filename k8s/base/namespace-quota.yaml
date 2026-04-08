@@ -9,6 +9,6 @@ spec:
   hard:
     requests.cpu: "2"
     requests.memory: 2048Mi
-    limits.cpu: "6"
+    limits.cpu: "3"
     limits.memory: 4096Mi
     pods: "25"

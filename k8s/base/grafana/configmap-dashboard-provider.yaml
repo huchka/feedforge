@@ -16,3 +16,8 @@ data:
         disableDeletion: true
         options:
           path: /etc/grafana/dashboards
+      - name: feedforge-cluster
+        type: file
+        disableDeletion: true
+        options:
+          path: /etc/grafana/dashboards/cluster

@@ -31,7 +31,7 @@ spec:
         runAsGroup: 102
       containers:
         - name: frontend
-          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/frontend:phase-5-rbac-wi-2-g1369e4e
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/frontend:phase-6-monitoring
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -45,7 +45,7 @@ spec:
               cpu: 50m
               memory: 64Mi
             limits:
-              cpu: 200m
+              cpu: 100m
               memory: 128Mi
           livenessProbe:
             httpGet:
