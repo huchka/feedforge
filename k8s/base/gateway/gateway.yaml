@@ -1,0 +1,15 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: feedforge-gateway
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: feedforge-gateway
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: feedforge
+spec:
+  gatewayClassName: gke-l7-global-external-managed
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80

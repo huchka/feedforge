@@ -32,6 +32,7 @@ RSS feed aggregator with AI summarization on GKE. See README.md for project over
 - NEVER run `kubectl` commands — the user runs all K8s commands themselves (learning project).
 - Provide the commands to run, but don't execute them.
 - NEVER `kubectl edit` — always change manifests and re-apply.
+- **Deploy with `skaffold run`** — NEVER suggest `kubectl apply -k`. Skaffold handles image build, tagging, and deploy. Raw `kubectl apply -k` overwrites image tags with stale values from manifests.
 - Label everything: `app.kubernetes.io/name`, `app.kubernetes.io/component`, `app.kubernetes.io/part-of: feedforge`.
 
 ### Docker

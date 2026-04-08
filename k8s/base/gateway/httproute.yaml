@@ -1,0 +1,28 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: feedforge-route
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: feedforge-route
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: feedforge
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: feedforge-gateway
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: backend
+          port: 8000
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: frontend
+          port: 8080

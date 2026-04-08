@@ -27,6 +27,10 @@ resource "google_container_cluster" "primary" {
 
   datapath_provider = "ADVANCED_DATAPATH"
 
+  gateway_api_config {
+    channel = "CHANNEL_STANDARD"
+  }
+
   workload_identity_config {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
