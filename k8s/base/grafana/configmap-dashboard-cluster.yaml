@@ -70,7 +70,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "" },
           "targets": [
             {
-              "expr": "1 - avg(rate(container_cpu_usage_seconds_total{id=\"/\", container=\"\"}[5m]) / on(node) group_left kube_node_status_allocatable{resource=\"cpu\"})",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{id=\"/\"}[5m])) / sum(machine_cpu_cores)",
               "legendFormat": ""
             }
           ],
@@ -98,7 +98,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "" },
           "targets": [
             {
-              "expr": "1 - sum(kube_node_status_allocatable{resource=\"memory\"} - on(node) container_memory_working_set_bytes{id=\"/\", container=\"\"}) / sum(kube_node_status_allocatable{resource=\"memory\"})",
+              "expr": "sum(container_memory_working_set_bytes{id=\"/\"}) / sum(machine_memory_bytes)",
               "legendFormat": ""
             }
           ],
