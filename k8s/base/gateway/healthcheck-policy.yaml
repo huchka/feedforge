@@ -1,0 +1,24 @@
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: backend-healthcheck
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: backend-healthcheck
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: feedforge
+spec:
+  default:
+    checkIntervalSec: 10
+    timeoutSec: 5
+    healthyThreshold: 2
+    unhealthyThreshold: 3
+    config:
+      type: HTTP
+      httpHealthCheck:
+        port: 8000
+        requestPath: /api/health
+  targetRef:
+    group: ""
+    kind: Service
+    name: backend
