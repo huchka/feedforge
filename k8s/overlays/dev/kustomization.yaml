@@ -6,5 +6,7 @@ resources:
 
 patches:
   - path: patches/backend-config-patch.yaml
-  - path: patches/backup-sa-patch.yaml
   - path: patches/summarizer-sa-patch.yaml
+  - path: patches/backend-sa-patch.yaml
+  - path: patches/fetcher-sa-patch.yaml
+  - path: patches/digest-sa-patch.yaml

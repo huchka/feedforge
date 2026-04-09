@@ -42,15 +42,34 @@ module "cloud_armor" {
   allowed_ips = var.allowed_ips
 }
 
-# Workload Identity binding — must run after GKE (creates the WI pool)
-resource "google_service_account_iam_member" "db_backup_workload_identity" {
-  service_account_id = module.iam.db_backup_sa_name
+module "cloud_sql" {
+  source      = "../../modules/cloud-sql"
+  project_id  = var.project_id
+  region      = var.region
+  network_id  = module.network.network_id
+  db_password = var.db_password
+
+  depends_on = [module.network]
+}
+
+# Workload Identity bindings — must run after GKE (creates the WI pool)
+
+# Backend, fetcher, digest → cloudsql-proxy GCP SA
+resource "google_service_account_iam_member" "cloudsql_proxy_workload_identity" {
+  for_each = toset([
+    "serviceAccount:${var.project_id}.svc.id.goog[feedforge/backend]",
+    "serviceAccount:${var.project_id}.svc.id.goog[feedforge/feed-fetcher]",
+    "serviceAccount:${var.project_id}.svc.id.goog[feedforge/daily-digest]",
+  ])
+
+  service_account_id = module.iam.cloudsql_proxy_sa_name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${var.project_id}.svc.id.goog[feedforge/db-backup]"
+  member             = each.value
 
   depends_on = [module.gke]
 }
 
+# Summarizer → summarizer GCP SA (has both aiplatform.user + cloudsql.client)
 resource "google_service_account_iam_member" "summarizer_workload_identity" {
   service_account_id = module.iam.summarizer_sa_name
   role               = "roles/iam.workloadIdentityUser"

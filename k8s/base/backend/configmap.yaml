@@ -8,9 +8,10 @@ metadata:
     app.kubernetes.io/component: api
     app.kubernetes.io/part-of: feedforge
 data:
-  FEEDFORGE_DB_HOST: "postgres.feedforge.svc.cluster.local"
+  FEEDFORGE_DB_HOST: "localhost"
   FEEDFORGE_DB_PORT: "5432"
   FEEDFORGE_DB_NAME: "feedforge"
+  CLOUD_SQL_INSTANCE: "PLACEHOLDER"
   FEEDFORGE_REDIS_HOST: "redis.feedforge.svc.cluster.local"
   FEEDFORGE_REDIS_PORT: "6379"
   FEEDFORGE_LLM_PROVIDER: "gemini"
