@@ -6,9 +6,12 @@ This project follows a structured SDLC. All tracking lives on GitHub.
 
 ### For issues that need design (`phase:design`)
 
-1. **Write a design doc** on the [wiki](https://github.com/huchka/feedforge/wiki) using the [Design Doc Template](https://github.com/huchka/feedforge/wiki/Design-Doc-Template)
+1. **Write the design** — choose the right level based on size and complexity:
+   - **`size:L` or multi-issue epics**: wiki page using the [Design Doc Template](https://github.com/huchka/feedforge/wiki/Design-Doc-Template). Use when there are meaningful tradeoffs or architectural decisions worth referencing later.
+   - **`size:M` with tradeoffs**: wiki page or inline in the issue body — use judgment.
+   - **`size:S` or obvious approach**: inline in the issue body. No wiki page needed.
 2. **Self-review** the design (re-read the next day for non-trivial work)
-3. **Update the issue** with the wiki link and change label from `phase:design` → `phase:ready`
+3. **Update the issue** with the wiki link (if applicable) and change label from `phase:design` → `phase:ready`
 4. **Move the issue** from "Backlog" → "Ready for Dev" on the [project board](https://github.com/users/huchka/projects/1)
 
 ### For issues ready to implement (`phase:ready`)
@@ -65,6 +68,6 @@ Where `N` is the GitHub issue number.
 ## Design Docs
 
 - Live on the [GitHub Wiki](https://github.com/huchka/feedforge/wiki)
-- One page per feature or epic
 - Use the [Design Doc Template](https://github.com/huchka/feedforge/wiki/Design-Doc-Template)
 - Link from the corresponding GitHub issue
+- **Not every issue needs a wiki page.** Only create one when there are architectural decisions or tradeoffs worth documenting for future reference. For straightforward tasks, design inline in the issue body.

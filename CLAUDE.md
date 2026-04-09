@@ -26,7 +26,7 @@ This project follows a structured SDLC. See [CONTRIBUTING.md](CONTRIBUTING.md) f
 - NEVER create an issue without acceptance criteria.
 - ALWAYS apply appropriate `type:`, `priority:`, and `size:` labels when creating issues.
 - ALWAYS link PRs to issues with `Closes #N`.
-- When starting a new feature: check if a design doc exists on the wiki. If not, draft one first.
+- When starting a new feature: check if a design exists (wiki page or inline in issue). Only create a wiki page for `size:L` or issues with meaningful architectural tradeoffs. For `size:S` or obvious approaches, inline in the issue body is sufficient.
 - When creating issues from a design: label them `phase:ready` only after design is reviewed.
 - New issues start as `phase:design` unless the task is straightforward (bug fix, small chore).
 - When starting work on an issue: move it to "In Progress" on the project board.
