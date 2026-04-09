@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudsql-proxy
+  namespace: feedforge
+spec:
+  template:
+    spec:
+      containers:
+        - name: cloud-sql-proxy
+          args:
+            - "--structured-logs"
+            - "--auto-iam-authn"
+            - "--port=5432"
+            - "project-76da2d1f-231c-4c94-ae9:us-central1:feedforge-dev"

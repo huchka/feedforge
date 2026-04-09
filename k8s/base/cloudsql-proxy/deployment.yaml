@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudsql-proxy
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: cloudsql-proxy
+    app.kubernetes.io/component: database-proxy
+    app.kubernetes.io/part-of: feedforge
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudsql-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cloudsql-proxy
+        app.kubernetes.io/component: database-proxy
+        app.kubernetes.io/part-of: feedforge
+    spec:
+      serviceAccountName: cloudsql-proxy
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+      containers:
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-auth-proxy:2.15.0
+          args:
+            - "--structured-logs"
+            - "--auto-iam-authn"
+            - "--port=5432"
+            - "INSTANCE_CONNECTION_NAME"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - containerPort: 5432
+              name: postgres
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3

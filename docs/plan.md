@@ -9,17 +9,17 @@
 | Feed Fetcher | Scheduled worker | Python | CronJob |
 | AI Summarizer | Background worker | Python | Deployment (long-running consumer) |
 | Daily Digest | Notification sender | Python | CronJob |
-| PostgreSQL | Database | PostgreSQL 16 | StatefulSet + PVC + headless Service |
+| PostgreSQL | Database | Cloud SQL for PostgreSQL 16 | Cloud SQL (managed) + Auth Proxy Deployment + Service |
 | Redis | Message queue / cache | Redis 7 | Deployment + Service |
 
 ## Data Flow
 
 ```
-[RSS Sources] → (CronJob: Fetcher) → [Redis Queue] → (Worker: Summarizer) → [PostgreSQL]
-                                                                                    ↑
-[User Browser] → (Ingress) → [Frontend] → [Backend API] ──────────────────────────┘
+[RSS Sources] → (CronJob: Fetcher) → [Redis Queue] → (Worker: Summarizer) → [Cloud SQL Proxy] → [Cloud SQL]
+                                                                                                      ↑
+[User Browser] → (Ingress) → [Frontend] → [Backend API] → [Cloud SQL Proxy] ────────────────────────┘
 
-(CronJob: Digest) → reads [PostgreSQL] → sends to [LINE/Slack]
+(CronJob: Digest) → reads via [Cloud SQL Proxy] → [Cloud SQL] → sends to [LINE/Slack]
 ```
 
 ## K8s Concepts Coverage (Learning Tracker)
@@ -52,6 +52,8 @@
 | Rolling update strategy | P3 | ☑ |
 | kustomize overlays | P3 | ☑ |
 | BackendConfig (Cloud Armor) | P3 | ☑ |
+| Cloud SQL Auth Proxy | P7 | ☐ |
+| Managed database (Cloud SQL) | P7 | ☐ |
 
 ## Phase 0: GCP Foundation + GKE Cluster
 **Goal**: GKE cluster running, nginx hello-world reachable from internet.
@@ -145,6 +147,24 @@
 - [x] Upgrade node machine type to e2-standard-2
 - [x] Set up Prometheus + basic monitoring (stretch)
 
+## Phase 7: Cloud SQL Migration
+**Goal**: Migrate PostgreSQL from in-cluster StatefulSet to managed Cloud SQL for improved reliability and automated backups.
+**Verification**: `terraform plan` shows Cloud SQL resources, `kustomize build` succeeds, all workloads connect via Cloud SQL Auth Proxy.
+
+- [ ] Create `terraform/modules/cloudsql/` module (instance, database, user, private IP, backups)
+- [ ] Add Cloud SQL Proxy IAM service account + `roles/cloudsql.client` to IAM module
+- [ ] Wire Cloud SQL module into `terraform/environments/dev/main.tf`
+- [ ] Add Workload Identity binding for Cloud SQL Auth Proxy
+- [ ] Deploy Cloud SQL Auth Proxy as standalone Deployment + Service
+- [ ] Update `backend-config` ConfigMap (`FEEDFORGE_DB_HOST` → `cloudsql-proxy`)
+- [ ] Update `backup-config` ConfigMap (`PGHOST` → `cloudsql-proxy`)
+- [ ] Replace postgres NetworkPolicy with Cloud SQL Proxy NetworkPolicy
+- [ ] Remove old StatefulSet manifests from kustomization.yaml
+- [ ] `terraform plan` → review → `terraform apply`
+- [ ] Migrate data: `pg_dump` from StatefulSet → `psql` import via proxy
+- [ ] Verify Alembic migrations against Cloud SQL
+- [ ] Verify all workloads (backend, summarizer, fetcher, digest, backup)
+
 ## Cost Budget
 
 **Monthly target**: ~$40-50 USD
@@ -153,11 +173,12 @@
 |----------|-----------------|
 | GKE cluster management (zonal) | $0 (free tier) |
 | 2× e2-standard-2 nodes (2 vCPU, 8GB) | ~$97 |
-| Persistent disk 20GB (SSD) | ~$3.40 |
+| Cloud SQL db-f1-micro (PostgreSQL 16) | ~$7-10 |
+| Cloud SQL storage 10GB (SSD) | ~$1.70 |
 | Artifact Registry storage | ~$1-2 |
 | Cloud Build | ~$0 (free tier) |
 | Network egress | ~$1-2 |
-| **Total** | **~$103/month** |
+| **Total** | **~$108-113/month** |
 
 **Budget rules**:
 - $300 credit / 88 days ≈ $3.40/day budget

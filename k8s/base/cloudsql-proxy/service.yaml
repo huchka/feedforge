@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudsql-proxy
+  namespace: feedforge
+  labels:
+    app.kubernetes.io/name: cloudsql-proxy
+    app.kubernetes.io/component: database-proxy
+    app.kubernetes.io/part-of: feedforge
+spec:
+  selector:
+    app.kubernetes.io/name: cloudsql-proxy
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+      protocol: TCP

@@ -9,6 +9,10 @@ resources:
   - namespace.yaml
   - namespace-quota.yaml
   - namespace-limitrange.yaml
+  - cloudsql-proxy/serviceaccount.yaml
+  - cloudsql-proxy/deployment.yaml
+  - cloudsql-proxy/service.yaml
+  - cloudsql-proxy/networkpolicy.yaml
   - redis/serviceaccount.yaml
   - redis/deployment.yaml
   - redis/service.yaml

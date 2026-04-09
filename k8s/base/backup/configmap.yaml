@@ -9,5 +9,5 @@ metadata:
     app.kubernetes.io/part-of: feedforge
 data:
   BACKUP_BUCKET: feedforge-db-backup-project-76da2d1f-231c-4c94-ae9
-  PGHOST: postgres
+  PGHOST: cloudsql-proxy
   PGDATABASE: feedforge

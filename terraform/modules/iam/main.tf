@@ -83,3 +83,17 @@ resource "google_project_iam_member" "summarizer_roles" {
   member  = "serviceAccount:${google_service_account.summarizer.email}"
 }
 
+# --- Cloud SQL Auth Proxy (Workload Identity) ---
+
+resource "google_service_account" "cloudsql_proxy" {
+  account_id   = "feedforge-cloudsql-proxy"
+  display_name = "FeedForge Cloud SQL Auth Proxy Service Account"
+  project      = var.project_id
+}
+
+resource "google_project_iam_member" "cloudsql_proxy_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.cloudsql_proxy.email}"
+}
+

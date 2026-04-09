@@ -21,3 +21,11 @@ output "summarizer_sa_email" {
 output "summarizer_sa_name" {
   value = google_service_account.summarizer.name
 }
+
+output "cloudsql_proxy_sa_email" {
+  value = google_service_account.cloudsql_proxy.email
+}
+
+output "cloudsql_proxy_sa_name" {
+  value = google_service_account.cloudsql_proxy.name
+}

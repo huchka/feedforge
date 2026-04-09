@@ -88,3 +88,28 @@ module "cloud_build" {
 
   depends_on = [module.iam]
 }
+
+# --- Cloud SQL ---
+
+module "cloudsql" {
+  source      = "../../modules/cloudsql"
+  project_id  = var.project_id
+  region      = var.region
+  network_id  = module.network.network_id
+  environment = "dev"
+
+  tier                = "db-f1-micro"
+  availability_type   = "ZONAL"
+  deletion_protection = true
+
+  depends_on = [module.network]
+}
+
+# Workload Identity binding — Cloud SQL Auth Proxy
+resource "google_service_account_iam_member" "cloudsql_proxy_workload_identity" {
+  service_account_id = module.iam.cloudsql_proxy_sa_name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[feedforge/cloudsql-proxy]"
+
+  depends_on = [module.gke]
+}

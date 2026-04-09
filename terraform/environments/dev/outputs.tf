@@ -22,3 +22,12 @@ output "get_credentials_command" {
 output "cloud_sql_connection_name" {
   value = module.cloud_sql.instance_connection_name
 }
+
+output "cloudsql_private_ip" {
+  value = module.cloudsql.private_ip_address
+}
+
+output "cloudsql_db_password" {
+  value     = module.cloudsql.user_password
+  sensitive = true
+}
