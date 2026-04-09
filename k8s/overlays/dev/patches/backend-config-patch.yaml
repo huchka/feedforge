@@ -5,3 +5,4 @@ metadata:
   namespace: feedforge
 data:
   FEEDFORGE_DEBUG: "true"
+  CLOUD_SQL_INSTANCE: "project-76da2d1f-231c-4c94-ae9:us-central1:feedforge-postgres"

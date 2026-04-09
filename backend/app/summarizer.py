@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 QUEUE_KEY = "feedforge:articles:pending"
 BRPOP_TIMEOUT = 30
-REQUEST_DELAY = 1.0
+REQUEST_DELAY = 3.0
 MAX_RETRIES = 5
 
 SYSTEM_PROMPT = (
@@ -92,7 +92,7 @@ def summarize_article(article: Article, client: genai.Client) -> str | None:
                 summary = summary[:last_period + 1] if last_period > 0 else summary[:max_chars]
             return summary
         except genai.errors.ClientError as exc:
-            if exc.status_code == 429 and attempt < MAX_RETRIES - 1:
+            if exc.code == 429 and attempt < MAX_RETRIES - 1:
                 wait = 2 ** attempt
                 logger.warning("Rate limited on article %s, retrying in %ds (attempt %d/%d)",
                                article.id, wait, attempt + 1, MAX_RETRIES)

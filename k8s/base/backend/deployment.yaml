@@ -30,8 +30,31 @@ spec:
         runAsUser: 999
         runAsGroup: 999
       initContainers:
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.15.2
+          restartPolicy: Always
+          args:
+            - "--structured-logs"
+            - "--private-ip"
+            - "--port=5432"
+            - "$(CLOUD_SQL_INSTANCE)"
+          envFrom:
+            - configMapRef:
+                name: backend-config
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 50m
+              memory: 64Mi
         - name: run-migrations
-          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-6-monitoring
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:cloud-sql
           command: ["alembic", "upgrade", "head"]
           securityContext:
             allowPrivilegeEscalation: false
@@ -82,7 +105,7 @@ spec:
               mountPath: /var/log/app
       containers:
         - name: backend
-          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:phase-6-monitoring
+          image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:cloud-sql
           command: ["sh", "-c"]
           args:
             - uvicorn app.main:app --host 0.0.0.0 --port 8000 2>&1 | tee /var/log/app/access.log

@@ -18,3 +18,7 @@ output "artifact_registry_url" {
 output "get_credentials_command" {
   value = "gcloud container clusters get-credentials ${module.gke.cluster_name} --zone ${var.zone} --project ${var.project_id}"
 }
+
+output "cloud_sql_connection_name" {
+  value = module.cloud_sql.instance_connection_name
+}

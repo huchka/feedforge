@@ -1,19 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Secret not listed here — apply it separately before running kustomize:
-#   cp k8s/base/postgres/secret-postgres.yaml.example k8s/base/postgres/secret-postgres.yaml
-#   # edit with real password
+# Cloud SQL credentials secret — apply separately before deploying:
+#   Edit k8s/base/postgres/secret-postgres.yaml with Cloud SQL password
 #   kubectl apply -f k8s/base/postgres/secret-postgres.yaml
 
 resources:
   - namespace.yaml
   - namespace-quota.yaml
   - namespace-limitrange.yaml
-  - postgres/serviceaccount.yaml
-  - postgres/service.yaml
-  - postgres/statefulset.yaml
-  - postgres/networkpolicy.yaml
   - redis/serviceaccount.yaml
   - redis/deployment.yaml
   - redis/service.yaml
@@ -40,9 +35,6 @@ resources:
   - summarizer/pdb.yaml
   - digest/serviceaccount.yaml
   - digest/cronjob.yaml
-  - backup/serviceaccount.yaml
-  - backup/configmap.yaml
-  - backup/job.yaml
   - prometheus/serviceaccount.yaml
   - prometheus/configmap.yaml
   - prometheus/deployment.yaml

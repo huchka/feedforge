@@ -46,36 +46,18 @@ resource "google_project_iam_member" "cloud_build_roles" {
   member  = "serviceAccount:${google_service_account.cloud_build.email}"
 }
 
-# --- DB Backup (Workload Identity) ---
+# --- Cloud SQL Proxy (Workload Identity) ---
 
-resource "google_service_account" "db_backup" {
-  account_id   = "feedforge-db-backup"
-  display_name = "FeedForge DB Backup Service Account"
+resource "google_service_account" "cloudsql_proxy" {
+  account_id   = "feedforge-cloudsql-proxy"
+  display_name = "FeedForge Cloud SQL Proxy Service Account"
   project      = var.project_id
 }
 
-resource "google_storage_bucket" "db_backup" {
-  name     = "feedforge-db-backup-${var.project_id}"
-  project  = var.project_id
-  location = var.region
-
-  uniform_bucket_level_access = true
-  public_access_prevention    = "enforced"
-
-  lifecycle_rule {
-    condition {
-      age = 7
-    }
-    action {
-      type = "Delete"
-    }
-  }
-}
-
-resource "google_storage_bucket_iam_member" "db_backup_writer" {
-  bucket = google_storage_bucket.db_backup.name
-  role   = "roles/storage.objectCreator"
-  member = "serviceAccount:${google_service_account.db_backup.email}"
+resource "google_project_iam_member" "cloudsql_proxy_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.cloudsql_proxy.email}"
 }
 
 # --- Summarizer (Workload Identity) ---
@@ -86,9 +68,18 @@ resource "google_service_account" "summarizer" {
   project      = var.project_id
 }
 
-resource "google_project_iam_member" "summarizer_aiplatform" {
+locals {
+  summarizer_roles = [
+    "roles/aiplatform.user",
+    "roles/cloudsql.client",
+  ]
+}
+
+resource "google_project_iam_member" "summarizer_roles" {
+  for_each = toset(local.summarizer_roles)
+
   project = var.project_id
-  role    = "roles/aiplatform.user"
+  role    = each.value
   member  = "serviceAccount:${google_service_account.summarizer.email}"
 }
 

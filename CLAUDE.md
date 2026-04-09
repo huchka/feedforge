@@ -11,6 +11,8 @@ RSS feed aggregator with AI summarization on GKE. See README.md for project over
 | Nodes | e2-medium (2 vCPU, 4GB), 2 nodes (autoscaler 1-3) | Balance cost vs capacity |
 | Registry | Artifact Registry (us-central1) | Regional = cheaper egress |
 | TF state bucket | GCS (asia-northeast1) | Created before region change, left as-is |
+| Database | Cloud SQL (Postgres 16, db-f1-micro) | Managed backups, patching, HA |
+| DB connectivity | Cloud SQL Auth Proxy sidecar | Workload Identity, no keys |
 | CI | Cloud Build | 120 free build-min/day |
 | IaC | Terraform with modules, GCS remote state | Learning goal |
 | K8s config | kustomize (base + overlays) | Environment management |
