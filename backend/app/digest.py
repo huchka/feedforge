@@ -67,6 +67,12 @@ def format_digest(articles: list[Article]) -> str:
     return "\n".join(lines)
 
 
+def format_empty_digest() -> str:
+    """Format a short notification for when there are no new articles."""
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    return f"FeedForge Daily Digest — {today}\nNo new articles today. Your feeds are up to date! \u2705"
+
+
 def _send_slack(text: str, total_articles: int) -> None:
     resp = httpx.post(settings.digest_webhook_url, json={"text": text}, timeout=30)
     resp.raise_for_status()
@@ -132,7 +138,11 @@ def main() -> None:
         )
 
         if not articles:
-            logger.info("No articles with summaries in the last %d hours, skipping", settings.digest_lookback_hours)
+            logger.info("No articles with summaries in the last %d hours, sending empty digest", settings.digest_lookback_hours)
+            text = format_empty_digest()
+            PROVIDERS[provider](text, 0)
+            elapsed = time.monotonic() - start
+            logger.info("Empty digest sent (%.1fs)", elapsed)
             return
 
         text = format_digest(articles)
