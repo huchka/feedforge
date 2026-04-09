@@ -17,7 +17,35 @@ RSS feed aggregator with AI summarization on GKE. See README.md for project over
 | IaC | Terraform with modules, GCS remote state | Learning goal |
 | K8s config | kustomize (base + overlays) | Environment management |
 
-## Workflow Rules
+## Development Process
+
+This project follows a structured SDLC. All tracking lives on GitHub.
+
+### Workflow Steps
+1. **Requirements** — Define the feature/task with clear acceptance criteria before any design work.
+2. **Design** — Write a design doc on the GitHub Wiki. Link it from the issue. For small tasks, inline in the issue is fine.
+3. **Design review** — Self-review the design (re-read next day for non-trivial work). Update wiki page with decision.
+4. **Task breakdown** — Create GitHub issues with acceptance criteria, labels, and wiki link. Break into sub-tasks if needed (use task lists in the parent issue).
+5. **Implementation** — Feature branch per issue. Write tests alongside code. Branch naming: `feat/xxx`, `infra/xxx`, `fix/xxx`.
+6. **PR** — Use the PR template. Reference issue with `Closes #N`. Self-review the diff before requesting merge.
+7. **Merge & deploy** — Merge to main. Deploy with `skaffold run`. Verify in target environment.
+8. **Verify** — Confirm acceptance criteria pass in the deployed environment.
+
+### GitHub Structure
+- **Project board**: "FeedForge" GitHub Project — columns: Backlog → Ready for Dev → In Progress → In Review → Done
+- **Labels**: `type:` (feature/bug/chore/docs), `priority:` (high/medium/low), `phase:` (design/ready), `size:` (S/M/L)
+- **Milestones**: group issues into logical releases or phases
+- **Wiki**: design docs, one page per feature/epic
+- **Issue templates**: feature, bug, chore — in `.github/ISSUE_TEMPLATE/`
+- **PR template**: in `.github/PULL_REQUEST_TEMPLATE.md`
+
+### Process Rules for Claude
+- NEVER create an issue without acceptance criteria.
+- ALWAYS apply appropriate `type:`, `priority:`, and `size:` labels when creating issues.
+- ALWAYS link PRs to issues with `Closes #N`.
+- When starting a new feature: check if a design doc exists on the wiki. If not, draft one first.
+- When creating issues from a design: label them `phase:ready` only after design is reviewed.
+- New issues start as `phase:design` unless the task is straightforward (bug fix, small chore).
 
 ### Git
 - Branch: `main` + feature branches (`feat/xxx`, `infra/xxx`, `fix/xxx`)
