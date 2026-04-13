@@ -1,9 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Cloud SQL credentials secret — apply separately before deploying:
-#   Edit k8s/base/postgres/secret-postgres.yaml with Cloud SQL password
-#   kubectl apply -f k8s/base/postgres/secret-postgres.yaml
+# Secrets are managed via GCP Secret Manager and synced by the Secrets Store
+# CSI Driver. See docs/secret-manager.md for provisioning instructions.
 
 resources:
   - namespace.yaml
@@ -60,3 +59,5 @@ resources:
   - kube-state-metrics/networkpolicy.yaml
   - prometheus/clusterroles.yaml
   - grafana/configmap-dashboard-cluster.yaml
+  - secret-store/secretproviderclass-postgres.yaml
+  - secret-store/secretproviderclass-notification.yaml

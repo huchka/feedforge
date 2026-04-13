@@ -25,6 +25,7 @@ spec:
         app.kubernetes.io/part-of: feedforge
     spec:
       serviceAccountName: backend
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
@@ -141,6 +142,9 @@ spec:
           volumeMounts:
             - name: app-logs
               mountPath: /var/log/app
+            - name: postgres-creds
+              mountPath: /mnt/secrets/postgres
+              readOnly: true
           livenessProbe:
             httpGet:
               path: /api/health
@@ -158,3 +162,9 @@ spec:
       volumes:
         - name: app-logs
           emptyDir: {}
+        - name: postgres-creds
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: postgres-credentials

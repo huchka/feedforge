@@ -18,6 +18,7 @@ spec:
         app.kubernetes.io/part-of: feedforge
     spec:
       serviceAccountName: db-backup
+      automountServiceAccountToken: false
       restartPolicy: Never
       securityContext:
         runAsNonRoot: true
@@ -70,6 +71,15 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            - name: postgres-creds
+              mountPath: /mnt/secrets/postgres
+              readOnly: true
       volumes:
         - name: tmp
           emptyDir: {}
+        - name: postgres-creds
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: postgres-credentials

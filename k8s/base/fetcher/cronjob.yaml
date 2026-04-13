@@ -24,6 +24,7 @@ spec:
             app.kubernetes.io/part-of: feedforge
         spec:
           serviceAccountName: feed-fetcher
+          automountServiceAccountToken: false
           restartPolicy: Never
           securityContext:
             runAsNonRoot: true
@@ -76,6 +77,10 @@ spec:
                     secretKeyRef:
                       name: postgres-credentials
                       key: POSTGRES_PASSWORD
+              volumeMounts:
+                - name: postgres-creds
+                  mountPath: /mnt/secrets/postgres
+                  readOnly: true
               resources:
                 requests:
                   cpu: 50m
@@ -83,3 +88,10 @@ spec:
                 limits:
                   cpu: 100m
                   memory: 128Mi
+          volumes:
+            - name: postgres-creds
+              csi:
+                driver: secrets-store.csi.k8s.io
+                readOnly: true
+                volumeAttributes:
+                  secretProviderClass: postgres-credentials
