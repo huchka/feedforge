@@ -43,6 +43,100 @@ Deployment, StatefulSet, CronJob, Job, DaemonSet, Ingress, HPA, Init containers,
 
 See [CLAUDE.md](./CLAUDE.md) for the full development plan and phase breakdown.
 
+## Deploying to a Fresh Environment
+
+End-to-end flow for standing up FeedForge on a new GCP project (or after a teardown).
+
+### Prerequisites
+
+- `gcloud`, `terraform`, `kubectl`, `skaffold`, `docker`, `kustomize`
+- A GCP project with billing enabled
+- A GCS bucket for Terraform state (name matches `terraform/environments/dev/backend.tf`)
+
+### 1. Configure variables
+
+Copy the example tfvars and fill in your project:
+
+```bash
+cd terraform/environments/dev
+cp terraform.tfvars.example terraform.tfvars
+# Edit: project_id, region, zone, allowed_ips, db_password
+```
+
+### 2. Authenticate
+
+```bash
+gcloud auth login
+gcloud auth application-default login
+gcloud config set project <PROJECT_ID>
+```
+
+### 3. Provision infrastructure
+
+```bash
+cd terraform/environments/dev
+terraform init
+terraform plan -out=tfplan
+terraform apply tfplan
+```
+
+Provisions: VPC, GKE (zonal, Standard), Cloud SQL (Postgres 16), Artifact Registry, IAM (Workload Identity), Cloud Build trigger. Takes ~15–20 min.
+
+> **Cloud Armor:** `SECURITY_POLICY_RULES` quota is 0 on new projects. The module is commented out in `main.tf` by default. Re-enable after requesting a quota increase, and restore `gateway/backend-policy.yaml` in `k8s/base/kustomization.yaml`.
+
+### 4. Connect kubectl
+
+```bash
+gcloud container clusters get-credentials feedforge-dev \
+  --zone <ZONE> --project <PROJECT_ID>
+
+kubectl config set-context --current --namespace=feedforge
+```
+
+### 5. Bootstrap cluster resources
+
+One-time setup before the app deploys.
+
+**Namespace + secrets:**
+
+```bash
+kubectl create namespace feedforge
+# Edit k8s/base/postgres/secret-postgres.yaml — password must match terraform.tfvars
+kubectl apply -f k8s/base/postgres/secret-postgres.yaml
+kubectl apply -f k8s/base/digest/secret-notification.yaml
+```
+
+**Cross-namespace RBAC** (prometheus-adapter needs to read `extension-apiserver-authentication` in `kube-system`):
+
+```bash
+kubectl apply -f k8s/bootstrap/prometheus-adapter-auth-reader.yaml
+```
+
+### 6. First deploy (build + push + apply)
+
+Use skaffold — it builds, pushes to Artifact Registry, and applies the overlay:
+
+```bash
+cd <repo root>
+skaffold run
+```
+
+Verify:
+
+```bash
+kubectl get pods,hpa,gateway,httproute
+kubectl get gateway feedforge-gateway -o jsonpath='{.status.addresses[0].value}'
+```
+
+### Teardown
+
+```bash
+cd terraform/environments/dev
+terraform destroy
+```
+
+Cloud SQL has deletion protection — disable in the module first if this fails.
+
 ## Cost
 
 Designed to run within GCP's $300 free trial credit (~$40-50/month with cost-conscious configuration).
