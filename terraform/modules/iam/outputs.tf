@@ -21,3 +21,11 @@ output "summarizer_sa_email" {
 output "summarizer_sa_name" {
   value = google_service_account.summarizer.name
 }
+
+output "db_backup_sa_email" {
+  value = google_service_account.db_backup.email
+}
+
+output "db_backup_sa_name" {
+  value = google_service_account.db_backup.name
+}

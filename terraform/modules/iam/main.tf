@@ -83,3 +83,26 @@ resource "google_project_iam_member" "summarizer_roles" {
   member  = "serviceAccount:${google_service_account.summarizer.email}"
 }
 
+# --- DB Backup (Workload Identity) ---
+
+resource "google_service_account" "db_backup" {
+  account_id   = "feedforge-db-backup"
+  display_name = "FeedForge DB Backup Service Account"
+  project      = var.project_id
+}
+
+locals {
+  db_backup_roles = [
+    "roles/cloudsql.client",
+    "roles/storage.objectCreator",
+  ]
+}
+
+resource "google_project_iam_member" "db_backup_roles" {
+  for_each = toset(local.db_backup_roles)
+
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:${google_service_account.db_backup.email}"
+}
+
