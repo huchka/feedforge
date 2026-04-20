@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: postgres
+  namespace: feedforge
+  annotations:
+    iam.gke.io/gcp-service-account: feedforge-cloudsql-proxy@project-76da2d1f-231c-4c94-ae9.iam.gserviceaccount.com

@@ -21,6 +21,7 @@ spec:
         app.kubernetes.io/part-of: feedforge
     spec:
       serviceAccountName: postgres
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 70
@@ -60,6 +61,9 @@ spec:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
               subPath: pgdata
+            - name: postgres-creds
+              mountPath: /mnt/secrets/postgres
+              readOnly: true
           resources:
             requests:
               cpu: 100m
@@ -77,6 +81,13 @@ spec:
               command: ["pg_isready", "-U", "feedforge"]
             initialDelaySeconds: 5
             periodSeconds: 5
+      volumes:
+        - name: postgres-creds
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: postgres-credentials
   volumeClaimTemplates:
     - metadata:
         name: postgres-data

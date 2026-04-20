@@ -16,3 +16,5 @@ patches:
   - path: patches/backend-sa-patch.yaml
   - path: patches/fetcher-sa-patch.yaml
   - path: patches/digest-sa-patch.yaml
+  - path: patches/backup-sa-patch.yaml
+  - path: patches/postgres-sa-patch.yaml

@@ -24,6 +24,7 @@ spec:
             app.kubernetes.io/part-of: feedforge
         spec:
           serviceAccountName: daily-digest
+          automountServiceAccountToken: false
           restartPolicy: Never
           securityContext:
             runAsNonRoot: true
@@ -96,6 +97,13 @@ spec:
                       name: notification-credentials
                       key: LINE_USER_ID
                       optional: true
+              volumeMounts:
+                - name: postgres-creds
+                  mountPath: /mnt/secrets/postgres
+                  readOnly: true
+                - name: notification-creds
+                  mountPath: /mnt/secrets/notification
+                  readOnly: true
               resources:
                 requests:
                   cpu: 50m
@@ -103,3 +111,16 @@ spec:
                 limits:
                   cpu: 100m
                   memory: 128Mi
+          volumes:
+            - name: postgres-creds
+              csi:
+                driver: secrets-store.csi.k8s.io
+                readOnly: true
+                volumeAttributes:
+                  secretProviderClass: postgres-credentials
+            - name: notification-creds
+              csi:
+                driver: secrets-store.csi.k8s.io
+                readOnly: true
+                volumeAttributes:
+                  secretProviderClass: notification-credentials
