@@ -25,7 +25,6 @@ resources:
   - frontend/pdb.yaml
   - gateway/gateway.yaml
   - gateway/httproute.yaml
-  - gateway/backend-policy.yaml
   - gateway/healthcheck-policy.yaml
   - fetcher/serviceaccount.yaml
   - fetcher/cronjob.yaml
