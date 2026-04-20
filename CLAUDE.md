@@ -13,7 +13,7 @@ RSS feed aggregator with AI summarization on GKE. See README.md for project over
 | TF state bucket | GCS (asia-northeast1) | Created before region change, left as-is |
 | Database | Cloud SQL (Postgres 16, db-f1-micro) | Managed backups, patching, HA |
 | DB connectivity | Cloud SQL Auth Proxy sidecar | Workload Identity, no keys |
-| CI | Cloud Build | 120 free build-min/day |
+| CI | GitHub Actions | Full SDLC on GitHub; GCP auth via Workload Identity Federation (no keys) |
 | IaC | Terraform with modules, GCS remote state | Learning goal |
 | K8s config | kustomize (base + overlays) | Environment management |
 

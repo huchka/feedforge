@@ -25,7 +25,7 @@ A self-hosted RSS feed aggregator with AI-powered summarization, running on GKE.
 | Layer | Technology |
 |-------|-----------|
 | Infrastructure | GCP, Terraform, GKE Standard |
-| CI/CD | Cloud Build, Artifact Registry, Cloud Deploy |
+| CI/CD | GitHub Actions, Artifact Registry |
 | Backend | Python, FastAPI, SQLAlchemy, Alembic |
 | Frontend | React, Vite, TypeScript |
 | Database | PostgreSQL 16 |
@@ -80,7 +80,15 @@ terraform plan -out=tfplan
 terraform apply tfplan
 ```
 
-Provisions: VPC, GKE (zonal, Standard), Cloud SQL (Postgres 16), Artifact Registry, IAM (Workload Identity), Cloud Build trigger. Takes ~15–20 min.
+Provisions: VPC, GKE (zonal, Standard), Cloud SQL (Postgres 16), Artifact Registry, IAM (Workload Identity for workloads + GitHub Actions WIF pool/provider). Takes ~15–20 min.
+
+After `terraform apply`, wire the WIF outputs into GitHub (Settings → Secrets and variables → Actions → Variables):
+
+```bash
+terraform output -raw github_actions_workload_identity_provider  # → GCP_WIF_PROVIDER
+terraform output -raw github_actions_service_account_email       # → GCP_SA_EMAIL
+# Also set GCP_PROJECT_ID to your project ID.
+```
 
 > **Cloud Armor:** `SECURITY_POLICY_RULES` quota is 0 on new projects. The module is commented out in `main.tf` by default. Re-enable after requesting a quota increase, and restore `gateway/backend-policy.yaml` in `k8s/base/kustomization.yaml`.
 
