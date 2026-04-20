@@ -43,6 +43,23 @@ Deployment, StatefulSet, CronJob, Job, DaemonSet, Ingress, HPA, Init containers,
 
 See [CLAUDE.md](./CLAUDE.md) for the full development plan and phase breakdown.
 
+## Bootstrap (Fresh Cluster)
+
+After provisioning infrastructure with Terraform and connecting kubectl:
+
+```bash
+# 1. Install the Secrets Store CSI Driver + GCP provider
+k8s/bootstrap/install-csi-secrets-store.sh
+
+# 2. Cross-namespace RBAC for prometheus-adapter
+kubectl apply -f k8s/bootstrap/prometheus-adapter-auth-reader.yaml
+
+# 3. Deploy with skaffold
+skaffold run
+```
+
+See [docs/secret-manager.md](docs/secret-manager.md) for Secret Manager provisioning details.
+
 ## Cost
 
 Designed to run within GCP's $300 free trial credit (~$40-50/month with cost-conscious configuration).
