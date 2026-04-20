@@ -72,11 +72,13 @@ spec:
                     secretKeyRef:
                       name: postgres-credentials
                       key: POSTGRES_USER
+                      optional: true
                 - name: FEEDFORGE_DB_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       name: postgres-credentials
                       key: POSTGRES_PASSWORD
+                      optional: true
                 - name: FEEDFORGE_DIGEST_PROVIDER
                   value: "line"
                 - name: FEEDFORGE_DIGEST_WEBHOOK_URL
