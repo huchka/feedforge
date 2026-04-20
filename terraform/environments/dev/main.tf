@@ -44,11 +44,13 @@ module "artifact_registry" {
   region     = var.region
 }
 
-module "cloud_armor" {
-  source      = "../../modules/cloud-armor"
-  project_id  = var.project_id
-  allowed_ips = var.allowed_ips
-}
+# Cloud Armor disabled — SECURITY_POLICY_RULES quota is 0 on this project.
+# Re-enable when quota is granted and also restore gateway/backend-policy.yaml in k8s/base/kustomization.yaml.
+# module "cloud_armor" {
+#   source      = "../../modules/cloud-armor"
+#   project_id  = var.project_id
+#   allowed_ips = var.allowed_ips
+# }
 
 module "cloud_sql" {
   source      = "../../modules/cloud-sql"

@@ -43,22 +43,98 @@ Deployment, StatefulSet, CronJob, Job, DaemonSet, Ingress, HPA, Init containers,
 
 See [CLAUDE.md](./CLAUDE.md) for the full development plan and phase breakdown.
 
-## Bootstrap (Fresh Cluster)
+## Deploying to a Fresh Environment
 
-After provisioning infrastructure with Terraform and connecting kubectl:
+End-to-end flow for standing up FeedForge on a new GCP project (or after a teardown).
+
+### Prerequisites
+
+- `gcloud`, `terraform`, `kubectl`, `skaffold`, `docker`, `kustomize`
+- A GCP project with billing enabled
+- A GCS bucket for Terraform state (name matches `terraform/environments/dev/backend.tf`)
+
+### 1. Configure variables
+
+Copy the example tfvars and fill in your project:
 
 ```bash
-# 1. Install the Secrets Store CSI Driver + GCP provider
+cd terraform/environments/dev
+cp terraform.tfvars.example terraform.tfvars
+# Edit: project_id, region, zone, allowed_ips, db_password
+```
+
+### 2. Authenticate
+
+```bash
+gcloud auth login
+gcloud auth application-default login
+gcloud config set project <PROJECT_ID>
+```
+
+### 3. Provision infrastructure
+
+```bash
+cd terraform/environments/dev
+terraform init
+terraform plan -out=tfplan
+terraform apply tfplan
+```
+
+Provisions: VPC, GKE (zonal, Standard), Cloud SQL (Postgres 16), Artifact Registry, IAM (Workload Identity), Cloud Build trigger. Takes ~15–20 min.
+
+> **Cloud Armor:** `SECURITY_POLICY_RULES` quota is 0 on new projects. The module is commented out in `main.tf` by default. Re-enable after requesting a quota increase, and restore `gateway/backend-policy.yaml` in `k8s/base/kustomization.yaml`.
+
+### 4. Connect kubectl
+
+```bash
+gcloud container clusters get-credentials feedforge-dev \
+  --zone <ZONE> --project <PROJECT_ID>
+
+kubectl config set-context --current --namespace=feedforge
+```
+
+### 5. Bootstrap cluster resources
+
+One-time setup before the app deploys.
+
+**Install the Secrets Store CSI Driver + GCP provider:**
+
+```bash
 k8s/bootstrap/install-csi-secrets-store.sh
+```
 
-# 2. Cross-namespace RBAC for prometheus-adapter
+See [docs/secret-manager.md](docs/secret-manager.md) for Secret Manager provisioning details (creating secrets in GCP, IAM roles, kustomize overlay setup).
+
+**Cross-namespace RBAC** (prometheus-adapter needs to read `extension-apiserver-authentication` in `kube-system`):
+
+```bash
 kubectl apply -f k8s/bootstrap/prometheus-adapter-auth-reader.yaml
+```
 
-# 3. Deploy with skaffold
+### 6. First deploy (build + push + apply)
+
+Use skaffold — it builds, pushes to Artifact Registry, and applies the overlay:
+
+```bash
+cd <repo root>
 skaffold run
 ```
 
-See [docs/secret-manager.md](docs/secret-manager.md) for Secret Manager provisioning details.
+Verify:
+
+```bash
+kubectl get pods,hpa,gateway,httproute
+kubectl get gateway feedforge-gateway -o jsonpath='{.status.addresses[0].value}'
+```
+
+### Teardown
+
+```bash
+cd terraform/environments/dev
+terraform destroy
+```
+
+Cloud SQL has deletion protection — disable in the module first if this fails.
 
 ## Cost
 

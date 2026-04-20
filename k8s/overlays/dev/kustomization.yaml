@@ -4,6 +4,12 @@ kind: Kustomization
 resources:
   - ../../base
 
+images:
+  - name: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend
+    newTag: a42276a
+  - name: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/frontend
+    newTag: a42276a
+
 patches:
   - path: patches/backend-config-patch.yaml
   - path: patches/summarizer-sa-patch.yaml
