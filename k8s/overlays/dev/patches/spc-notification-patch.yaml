@@ -1,0 +1,15 @@
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: notification-credentials
+  namespace: feedforge
+spec:
+  parameters:
+    # TODO: Update this project ID when deploying to a different environment.
+    secrets: |
+      - resourceName: "projects/project-76da2d1f-231c-4c94-ae9/secrets/feedforge-notification-webhook-url/versions/latest"
+        path: "NOTIFICATION_WEBHOOK_URL"
+      - resourceName: "projects/project-76da2d1f-231c-4c94-ae9/secrets/feedforge-line-channel-token/versions/latest"
+        path: "LINE_CHANNEL_TOKEN"
+      - resourceName: "projects/project-76da2d1f-231c-4c94-ae9/secrets/feedforge-line-user-id/versions/latest"
+        path: "LINE_USER_ID"

@@ -3,6 +3,14 @@ provider "google" {
   region  = var.region
 }
 
+# --- Project APIs ---
+
+resource "google_project_service" "secretmanager" {
+  project            = var.project_id
+  service            = "secretmanager.googleapis.com"
+  disable_on_destroy = false
+}
+
 module "iam" {
   source     = "../../modules/iam"
   project_id = var.project_id
@@ -78,6 +86,59 @@ resource "google_service_account_iam_member" "summarizer_workload_identity" {
   member             = "serviceAccount:${var.project_id}.svc.id.goog[feedforge/summarizer]"
 
   depends_on = [module.gke]
+}
+
+# --- Secret Manager IAM grants ---
+# Grant secretAccessor to each GSA for the secrets it needs.
+
+locals {
+  # Postgres secrets accessed by cloudsql-proxy and summarizer GSAs
+  postgres_secret_names = [
+    "feedforge-postgres-user",
+    "feedforge-postgres-password",
+  ]
+
+  postgres_secret_accessors = {
+    cloudsql_proxy = module.iam.cloudsql_proxy_sa_email
+    summarizer     = module.iam.summarizer_sa_email
+  }
+
+  postgres_secret_bindings = flatten([
+    for secret in local.postgres_secret_names : [
+      for sa_key, sa_email in local.postgres_secret_accessors : {
+        secret   = secret
+        sa_key   = sa_key
+        sa_email = sa_email
+      }
+    ]
+  ])
+
+  # Notification secrets accessed only by cloudsql-proxy GSA (used by digest)
+  notification_secret_names = [
+    "feedforge-notification-webhook-url",
+    "feedforge-line-channel-token",
+    "feedforge-line-user-id",
+  ]
+}
+
+resource "google_secret_manager_secret_iam_member" "postgres_secret_access" {
+  for_each = {
+    for b in local.postgres_secret_bindings : "${b.secret}_${b.sa_key}" => b
+  }
+
+  project   = var.project_id
+  secret_id = each.value.secret
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${each.value.sa_email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "notification_secret_access" {
+  for_each = toset(local.notification_secret_names)
+
+  project   = var.project_id
+  secret_id = each.value
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${module.iam.cloudsql_proxy_sa_email}"
 }
 
 module "github_actions" {
