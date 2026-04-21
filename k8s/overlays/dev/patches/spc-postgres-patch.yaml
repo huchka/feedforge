@@ -1,0 +1,13 @@
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: postgres-credentials
+  namespace: feedforge
+spec:
+  parameters:
+    # TODO: Update this project ID when deploying to a different environment.
+    secrets: |
+      - resourceName: "projects/project-76da2d1f-231c-4c94-ae9/secrets/feedforge-postgres-user/versions/latest"
+        path: "POSTGRES_USER"
+      - resourceName: "projects/project-76da2d1f-231c-4c94-ae9/secrets/feedforge-postgres-password/versions/latest"
+        path: "POSTGRES_PASSWORD"

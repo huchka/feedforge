@@ -97,14 +97,13 @@ kubectl config set-context --current --namespace=feedforge
 
 One-time setup before the app deploys.
 
-**Namespace + secrets:**
+**Install the Secrets Store CSI Driver + GCP provider:**
 
 ```bash
-kubectl create namespace feedforge
-# Edit k8s/base/postgres/secret-postgres.yaml — password must match terraform.tfvars
-kubectl apply -f k8s/base/postgres/secret-postgres.yaml
-kubectl apply -f k8s/base/digest/secret-notification.yaml
+k8s/bootstrap/install-csi-secrets-store.sh
 ```
+
+See [docs/secret-manager.md](docs/secret-manager.md) for Secret Manager provisioning details (creating secrets in GCP, IAM roles, kustomize overlay setup).
 
 **Cross-namespace RBAC** (prometheus-adapter needs to read `extension-apiserver-authentication` in `kube-system`):
 

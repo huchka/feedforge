@@ -82,4 +82,3 @@ resource "google_project_iam_member" "summarizer_roles" {
   role    = each.value
   member  = "serviceAccount:${google_service_account.summarizer.email}"
 }
-

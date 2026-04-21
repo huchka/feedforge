@@ -25,6 +25,7 @@ spec:
         app.kubernetes.io/part-of: feedforge
     spec:
       serviceAccountName: backend
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
@@ -70,11 +71,13 @@ spec:
                 secretKeyRef:
                   name: postgres-credentials
                   key: POSTGRES_USER
+                  optional: true
             - name: FEEDFORGE_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-credentials
                   key: POSTGRES_PASSWORD
+                  optional: true
           resources:
             requests:
               cpu: 50m
@@ -126,11 +129,13 @@ spec:
                 secretKeyRef:
                   name: postgres-credentials
                   key: POSTGRES_USER
+                  optional: true
             - name: FEEDFORGE_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-credentials
                   key: POSTGRES_PASSWORD
+                  optional: true
           resources:
             requests:
               cpu: 100m
@@ -141,6 +146,9 @@ spec:
           volumeMounts:
             - name: app-logs
               mountPath: /var/log/app
+            - name: postgres-creds
+              mountPath: /mnt/secrets/postgres
+              readOnly: true
           livenessProbe:
             httpGet:
               path: /api/health
@@ -158,3 +166,9 @@ spec:
       volumes:
         - name: app-logs
           emptyDir: {}
+        - name: postgres-creds
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: postgres-credentials
