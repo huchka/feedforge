@@ -88,20 +88,11 @@ resource "google_service_account_iam_member" "summarizer_workload_identity" {
   depends_on = [module.gke]
 }
 
-# DB Backup → db-backup GCP SA (has cloudsql.client + storage.objectCreator)
-resource "google_service_account_iam_member" "db_backup_workload_identity" {
-  service_account_id = module.iam.db_backup_sa_name
-  role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${var.project_id}.svc.id.goog[feedforge/db-backup]"
-
-  depends_on = [module.gke]
-}
-
 # --- Secret Manager IAM grants ---
 # Grant secretAccessor to each GSA for the secrets it needs.
 
 locals {
-  # Postgres secrets accessed by cloudsql-proxy, summarizer, and db-backup GSAs
+  # Postgres secrets accessed by cloudsql-proxy and summarizer GSAs
   postgres_secret_names = [
     "feedforge-postgres-user",
     "feedforge-postgres-password",
@@ -110,7 +101,6 @@ locals {
   postgres_secret_accessors = {
     cloudsql_proxy = module.iam.cloudsql_proxy_sa_email
     summarizer     = module.iam.summarizer_sa_email
-    db_backup      = module.iam.db_backup_sa_email
   }
 
   postgres_secret_bindings = flatten([

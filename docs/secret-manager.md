@@ -37,8 +37,8 @@ from the synced K8s Secret just as before.
 
 | GCP Secret Name | K8s Secret Key | Used By |
 |---|---|---|
-| `feedforge-postgres-user` | `POSTGRES_USER` | backend, summarizer, fetcher, digest, backup |
-| `feedforge-postgres-password` | `POSTGRES_PASSWORD` | backend, summarizer, fetcher, digest, backup |
+| `feedforge-postgres-user` | `POSTGRES_USER` | backend, summarizer, fetcher, digest |
+| `feedforge-postgres-password` | `POSTGRES_PASSWORD` | backend, summarizer, fetcher, digest |
 
 ### notification-credentials
 
@@ -108,7 +108,6 @@ Terraform (`terraform/environments/dev/main.tf`) as
 |--------|---------|
 | `feedforge-cloudsql-proxy` | All postgres + notification secrets |
 | `feedforge-summarizer` | Postgres secrets |
-| `feedforge-db-backup` | Postgres secrets |
 
 These are applied automatically by `terraform apply`. No manual `gcloud`
 commands needed.
