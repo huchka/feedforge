@@ -85,9 +85,9 @@ Provisions: VPC, GKE (zonal, Standard), Cloud SQL (Postgres 16), Artifact Regist
 After `terraform apply`, wire the WIF outputs into GitHub (Settings → Secrets and variables → Actions → Variables):
 
 ```bash
+terraform output -raw github_actions_project_id                  # → GCP_PROJECT_ID
 terraform output -raw github_actions_workload_identity_provider  # → GCP_WIF_PROVIDER
 terraform output -raw github_actions_service_account_email       # → GCP_SA_EMAIL
-# Also set GCP_PROJECT_ID to your project ID.
 ```
 
 > **Cloud Armor:** `SECURITY_POLICY_RULES` quota is 0 on new projects. The module is commented out in `main.tf` by default. Re-enable after requesting a quota increase, and restore `gateway/backend-policy.yaml` in `k8s/base/kustomization.yaml`.

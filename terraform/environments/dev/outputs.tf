@@ -25,6 +25,11 @@ output "cloud_sql_connection_name" {
 
 # GitHub Actions WIF — set these as repo variables in GitHub
 # (Settings → Secrets and variables → Actions → Variables)
+output "github_actions_project_id" {
+  value       = var.project_id
+  description = "Set as the GCP_PROJECT_ID repo variable in GitHub"
+}
+
 output "github_actions_service_account_email" {
   value       = module.github_actions.service_account_email
   description = "Set as the GCP_SA_EMAIL repo variable in GitHub"

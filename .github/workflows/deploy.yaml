@@ -20,12 +20,14 @@ jobs:
   deploy:
     name: skaffold run → dev cluster
     runs-on: ubuntu-latest
+    timeout-minutes: 20 # guard against a stuck rollout burning the 6h default
     permissions:
       id-token: write # required for Workload Identity Federation
       contents: read
     env:
       CLUSTER_NAME: feedforge-cluster
       CLUSTER_ZONE: us-central1-f
+      SKAFFOLD_VERSION: v2.13.2
     steps:
       - uses: actions/checkout@v4
 
@@ -48,9 +50,8 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      - name: Install gke-gcloud-auth-plugin
-        run: gcloud components install gke-gcloud-auth-plugin --quiet
-
+      # get-gke-credentials@v2 installs gke-gcloud-auth-plugin for us, so we
+      # don't need a separate `gcloud components install` step.
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
@@ -59,7 +60,7 @@ jobs:
 
       - name: Install skaffold
         run: |
-          curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
+          curl -fsSLo skaffold "https://storage.googleapis.com/skaffold/releases/${SKAFFOLD_VERSION}/skaffold-linux-amd64"
           sudo install skaffold /usr/local/bin/
           skaffold version
 
