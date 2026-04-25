@@ -1,4 +1,4 @@
-.PHONY: help compose-up compose-down cluster-up cluster-down deploy-local dev-local use-cloudsql
+.PHONY: help compose-up compose-down cluster-up cluster-down deploy-local dev-local port-forward use-cloudsql
 
 CLOUD_SQL_INSTANCE ?= project-76da2d1f-231c-4c94-ae9:us-central1:feedforge-postgres
 
@@ -12,6 +12,7 @@ help:
 	@echo "  make cluster-down      Delete the cluster"
 	@echo "  make deploy-local      skaffold run -p local (one-shot deploy)"
 	@echo "  make dev-local         skaffold dev -p local (watch + redeploy)"
+	@echo "  make port-forward      backend :8000, debugpy :5678, frontend :8080"
 	@echo ""
 	@echo "Hybrid — Tier 1 against real Cloud SQL:"
 	@echo "  make use-cloudsql      Run Cloud SQL Auth Proxy on localhost:5433"
@@ -33,6 +34,16 @@ deploy-local:
 
 dev-local:
 	skaffold dev -p local
+
+# Foreground; Ctrl-C tears all three down. Use after `make deploy-local`
+# (skaffold run drops port-forwards on exit; skaffold dev keeps them).
+port-forward:
+	@echo "==> Forwarding backend :8000, debugpy :5678, frontend :8080 (Ctrl-C to stop)"
+	@trap 'kill 0' EXIT INT TERM; \
+		kubectl port-forward -n feedforge svc/backend  8000:8000 & \
+		kubectl port-forward -n feedforge svc/backend  5678:5678 & \
+		kubectl port-forward -n feedforge svc/frontend 8080:8080 & \
+		wait
 
 use-cloudsql:
 	@echo "==> Starting Cloud SQL Auth Proxy on localhost:5433"
