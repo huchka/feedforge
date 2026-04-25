@@ -40,6 +40,10 @@ profiles:
     activation:
       - kubeContext: kind-feedforge-local
     build:
+      # kind nodes inherit the host arch. Override the top-level linux/amd64
+      # (which targets GKE) so images match the local cluster.
+      # Intel Mac users: change to linux/amd64.
+      platforms: ["linux/arm64"]
       local:
         push: false
       artifacts:
