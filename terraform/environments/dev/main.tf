@@ -119,6 +119,21 @@ locals {
     "feedforge-line-channel-token",
     "feedforge-line-user-id",
   ]
+
+  all_secrets = toset(concat(local.postgres_secret_names, local.notification_secret_names))
+}
+
+resource "google_secret_manager_secret" "feedforge_secrets" {
+  for_each = local.all_secrets
+
+  project   = var.project_id
+  secret_id = each.value
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.secretmanager]
 }
 
 resource "google_secret_manager_secret_iam_member" "postgres_secret_access" {
@@ -127,7 +142,7 @@ resource "google_secret_manager_secret_iam_member" "postgres_secret_access" {
   }
 
   project   = var.project_id
-  secret_id = each.value.secret
+  secret_id = google_secret_manager_secret.feedforge_secrets[each.value.secret].id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${each.value.sa_email}"
 }
@@ -136,7 +151,7 @@ resource "google_secret_manager_secret_iam_member" "notification_secret_access" 
   for_each = toset(local.notification_secret_names)
 
   project   = var.project_id
-  secret_id = each.value
+  secret_id = google_secret_manager_secret.feedforge_secrets[each.value].id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${module.iam.cloudsql_proxy_sa_email}"
 }
