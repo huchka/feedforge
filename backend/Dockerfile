@@ -1,14 +1,24 @@
 FROM python:3.12.8-slim AS builder
 
+ARG INSTALL_DEV=false
+
 COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /usr/local/bin/uv
 
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+RUN if [ "$INSTALL_DEV" = "true" ]; then \
+      uv sync --frozen --no-install-project; \
+    else \
+      uv sync --frozen --no-dev --no-install-project; \
+    fi
 
 COPY . .
-RUN uv sync --frozen --no-dev
+RUN if [ "$INSTALL_DEV" = "true" ]; then \
+      uv sync --frozen; \
+    else \
+      uv sync --frozen --no-dev; \
+    fi
 
 
 FROM python:3.12.8-slim AS runtime

@@ -32,5 +32,48 @@ portForward:
   - resourceType: service
     resourceName: frontend
     namespace: feedforge
-    port: 80
+    port: 8080
     localPort: 8080
+
+profiles:
+  - name: local
+    activation:
+      - kubeContext: kind-feedforge-local
+    build:
+      # kind nodes inherit the host arch. Override the top-level linux/amd64
+      # (which targets GKE) so images match the local cluster.
+      # Intel Mac users: change to linux/amd64.
+      platforms: ["linux/arm64"]
+      local:
+        push: false
+      artifacts:
+        - image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend
+          context: backend
+          docker:
+            dockerfile: Dockerfile
+            buildArgs:
+              INSTALL_DEV: "true"
+        - image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/frontend
+          context: frontend
+          docker:
+            dockerfile: Dockerfile
+    manifests:
+      kustomize:
+        paths:
+          - k8s/overlays/local
+    portForward:
+      - resourceType: service
+        resourceName: backend
+        namespace: feedforge
+        port: 8000
+        localPort: 8000
+      - resourceType: service
+        resourceName: backend
+        namespace: feedforge
+        port: 5678
+        localPort: 5678
+      - resourceType: service
+        resourceName: frontend
+        namespace: feedforge
+        port: 80
+        localPort: 8080

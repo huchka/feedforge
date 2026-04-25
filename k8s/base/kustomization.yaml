@@ -15,8 +15,7 @@ resources:
   - fetcher
   - summarizer
   - digest
-  - prometheus
-  - grafana
-  - prometheus-adapter
-  - kube-state-metrics
   - secret-store
+  # Observability (prometheus, grafana, kube-state-metrics, prometheus-adapter)
+  # is opt-in via components: see k8s/components/monitoring{,-hpa-bridge}/.
+  # Add to an overlay's components: list to include them.

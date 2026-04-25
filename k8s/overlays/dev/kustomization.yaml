@@ -4,6 +4,10 @@ kind: Kustomization
 resources:
   - ../../base
 
+components:
+  - ../../components/monitoring
+  - ../../components/monitoring-hpa-bridge
+
 images:
   - name: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend
     newTag: a42276a

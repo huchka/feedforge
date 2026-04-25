@@ -1,0 +1,13 @@
+# Mixin: in-cluster Prometheus + Grafana + kube-state-metrics.
+#
+# Apps emit metrics on /metrics; this Component scrapes and dashboards them.
+# No coupling back to app workloads — they run fine without this.
+#
+# Apply by adding `components: [../../components/monitoring]` to an overlay.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - prometheus
+  - grafana
+  - kube-state-metrics

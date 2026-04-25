@@ -1,0 +1,44 @@
+# Strip GCP-only init containers and the Secret-Store-CSI volume.
+# Migration init container is kept; its command is wrapped to wait for the
+# CNPG primary's TCP port (avoids a startup race when CNPG initdb hasn't
+# finished by the time backend starts).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: feedforge
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: cloud-sql-proxy
+          $patch: delete
+        - name: log-exporter
+          $patch: delete
+        - name: run-migrations
+          command:
+            - sh
+            - -c
+            - |
+              until python -c "import socket; socket.create_connection(('$FEEDFORGE_DB_HOST', int('$FEEDFORGE_DB_PORT')), timeout=2).close()" 2>/dev/null; do
+                echo "waiting for $FEEDFORGE_DB_HOST:$FEEDFORGE_DB_PORT..."
+                sleep 2
+              done
+              alembic upgrade head
+      containers:
+        - name: backend
+          ports:
+            - containerPort: 8000
+              name: http
+            - containerPort: 5678
+              name: debugpy
+          volumeMounts:
+            - name: app-logs
+              mountPath: /var/log/app
+            - name: postgres-creds
+              $patch: delete
+      volumes:
+        - name: app-logs
+          emptyDir: {}
+        - name: postgres-creds
+          $patch: delete

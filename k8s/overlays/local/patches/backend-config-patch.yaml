@@ -1,0 +1,11 @@
+# Local-overlay-only env. Postgres host/port/name are set by the
+# postgres-cnpg component. Anything that's about *running locally*
+# (debugger, debug logging) belongs here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: feedforge
+data:
+  FEEDFORGE_DEBUG: "true"
+  DEBUG_PY: "1"
