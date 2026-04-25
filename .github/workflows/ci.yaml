@@ -50,10 +50,10 @@ jobs:
 
       - name: Render overlay
         run: |
-          kubectl kustomize k8s/overlays/${{ matrix.overlay }} > /tmp/rendered.yaml
-          test -s /tmp/rendered.yaml
+          kubectl kustomize k8s/overlays/${{ matrix.overlay }} > rendered.yaml
+          test -s rendered.yaml
 
       - name: Schema validation (kubeconform)
         uses: docker://ghcr.io/yannh/kubeconform:latest-alpine
         with:
-          args: -strict -ignore-missing-schemas -summary /tmp/rendered.yaml
+          args: -strict -ignore-missing-schemas -summary rendered.yaml
