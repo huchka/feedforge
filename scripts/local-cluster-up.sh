@@ -31,9 +31,18 @@ echo "==> Installing Calico CNI (${CALICO_VERSION})"
 kubectl apply --server-side -f "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/tigera-operator.yaml"
 kubectl apply -f "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/custom-resources.yaml"
 
-echo "==> Waiting for Calico to be ready (this takes a minute)"
+echo "==> Waiting for tigera-operator"
+kubectl -n tigera-operator wait --for=condition=Available --timeout=120s deployment/tigera-operator
+
+echo "==> Waiting for calico-system namespace (operator creates it)"
+for _ in $(seq 1 60); do
+  kubectl get namespace calico-system >/dev/null 2>&1 && break
+  sleep 3
+done
+
+echo "==> Waiting for Calico pods to be Ready (this takes a minute)"
 kubectl -n calico-system wait --for=condition=Ready pods --all --timeout=300s || {
-  echo "Calico pods not ready yet — check 'kubectl -n calico-system get pods'"
+  echo "Calico pods not ready — check 'kubectl -n calico-system get pods'"
   exit 1
 }
 
