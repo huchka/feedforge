@@ -1,6 +1,7 @@
 # Strip GCP-only init containers and the Secret-Store-CSI volume.
-# Migration init container is kept; it talks to the in-cluster CNPG service
-# via FEEDFORGE_DB_HOST="feedforge-db-rw" (set in backend-config-patch.yaml).
+# Migration init container is kept; its command is wrapped to wait for the
+# CNPG primary's TCP port (avoids a startup race when CNPG initdb hasn't
+# finished by the time backend starts).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,6 +15,16 @@ spec:
           $patch: delete
         - name: log-exporter
           $patch: delete
+        - name: run-migrations
+          command:
+            - sh
+            - -c
+            - |
+              until python -c "import socket; socket.create_connection(('$FEEDFORGE_DB_HOST', int('$FEEDFORGE_DB_PORT')), timeout=2).close()" 2>/dev/null; do
+                echo "waiting for $FEEDFORGE_DB_HOST:$FEEDFORGE_DB_PORT..."
+                sleep 2
+              done
+              alembic upgrade head
       containers:
         - name: backend
           ports:
