@@ -111,7 +111,7 @@ One-time setup before the app deploys.
 k8s/bootstrap/install-csi-secrets-store.sh
 ```
 
-See [docs/secret-manager.md](docs/secret-manager.md) for Secret Manager provisioning details (creating secrets in GCP, IAM roles, kustomize overlay setup).
+See [docs/secret-manager.md](docs/secret-manager.md) for Secret Manager provisioning details (populating secret values in GCP, IAM roles, kustomize overlay setup).
 
 **Cross-namespace RBAC** (prometheus-adapter needs to read `extension-apiserver-authentication` in `kube-system`):
 
