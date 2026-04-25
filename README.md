@@ -147,3 +147,4 @@ Cloud SQL has deletion protection — disable in the module first if this fails.
 ## Cost
 
 Designed to run within GCP's $300 free trial credit (~$40-50/month with cost-conscious configuration).
+
