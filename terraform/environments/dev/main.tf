@@ -141,13 +141,8 @@ resource "google_secret_manager_secret_iam_member" "notification_secret_access" 
   member    = "serviceAccount:${module.iam.cloudsql_proxy_sa_email}"
 }
 
-module "cloud_build" {
-  source                = "../../modules/cloud-build"
-  project_id            = var.project_id
-  region                = var.region
-  connection_name       = "github"
-  repository_name       = "huchka-feedforge"
-  service_account_email = module.iam.cloud_build_sa_email
-
-  depends_on = [module.iam]
+module "github_actions" {
+  source            = "../../modules/github-actions"
+  project_id        = var.project_id
+  github_repository = "huchka/feedforge"
 }

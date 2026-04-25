@@ -23,29 +23,6 @@ resource "google_project_iam_member" "gke_node_roles" {
   member  = "serviceAccount:${google_service_account.gke_nodes.email}"
 }
 
-# Cloud Build — user-managed SA (required for v2 triggers)
-resource "google_service_account" "cloud_build" {
-  account_id   = "feedforge-cloud-build"
-  display_name = "FeedForge Cloud Build Service Account"
-  project      = var.project_id
-}
-
-locals {
-  cloud_build_roles = [
-    "roles/container.developer",
-    "roles/artifactregistry.writer",
-    "roles/logging.logWriter",
-  ]
-}
-
-resource "google_project_iam_member" "cloud_build_roles" {
-  for_each = toset(local.cloud_build_roles)
-
-  project = var.project_id
-  role    = each.value
-  member  = "serviceAccount:${google_service_account.cloud_build.email}"
-}
-
 # --- Cloud SQL Proxy (Workload Identity) ---
 
 resource "google_service_account" "cloudsql_proxy" {

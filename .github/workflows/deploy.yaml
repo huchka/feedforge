@@ -1,0 +1,68 @@
+name: deploy
+
+# Build + deploy to the dev GKE cluster on every push to main.
+# Uses `skaffold run` per CLAUDE.md: skaffold owns build → tag → push →
+# kustomize-rewrite → apply → rollout wait, which avoids the stale-image-tag
+# hazard of raw `kubectl apply -k`.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Serialize deploys so two commits landing close together don't race the
+  # rollout. Don't cancel in progress — we want the in-flight deploy to finish.
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: skaffold run → dev cluster
+    runs-on: ubuntu-latest
+    timeout-minutes: 20 # guard against a stuck rollout burning the 6h default
+    permissions:
+      id-token: write # required for Workload Identity Federation
+      contents: read
+    env:
+      CLUSTER_NAME: feedforge-cluster
+      CLUSTER_ZONE: us-central1-f
+      SKAFFOLD_VERSION: v2.13.2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Authenticate to Google Cloud (WIF)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SA_EMAIL }}
+          token_format: access_token
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      # get-gke-credentials@v2 installs gke-gcloud-auth-plugin for us, so we
+      # don't need a separate `gcloud components install` step.
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.CLUSTER_NAME }}
+          location: ${{ env.CLUSTER_ZONE }}
+
+      - name: Install skaffold
+        run: |
+          curl -fsSLo skaffold "https://storage.googleapis.com/skaffold/releases/${SKAFFOLD_VERSION}/skaffold-linux-amd64"
+          sudo install skaffold /usr/local/bin/
+          skaffold version
+
+      - name: skaffold run
+        run: skaffold run --tag=${{ github.sha }}
