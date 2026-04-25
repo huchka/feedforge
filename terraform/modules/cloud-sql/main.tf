@@ -16,6 +16,20 @@ resource "google_sql_database_instance" "postgres" {
     ip_configuration {
       ipv4_enabled    = false
       private_network = var.network_id
+      ssl_mode        = "ENCRYPTED_ONLY"
+    }
+
+    database_flags {
+      name  = "cloudsql.enable_pgaudit"
+      value = "on"
+    }
+
+    password_validation_policy {
+      min_length                  = 12
+      complexity                  = "COMPLEXITY_DEFAULT"
+      reuse_interval              = 2
+      disallow_username_substring = true
+      enable_password_policy      = true
     }
 
     backup_configuration {

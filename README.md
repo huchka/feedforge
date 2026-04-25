@@ -80,7 +80,7 @@ terraform plan -out=tfplan
 terraform apply tfplan
 ```
 
-Provisions: VPC, GKE (zonal, Standard), Cloud SQL (Postgres 16), Artifact Registry, IAM (Workload Identity for workloads + GitHub Actions WIF pool/provider). Takes ~15–20 min.
+Provisions: VPC, GKE (zonal, Standard), Cloud SQL (Postgres 16), Artifact Registry, IAM (Workload Identity for workloads + GitHub Actions WIF pool/provider), Secret Manager secret containers. Takes ~15–20 min.
 
 After `terraform apply`, wire the WIF outputs into GitHub (Settings → Secrets and variables → Actions → Variables):
 

@@ -67,34 +67,27 @@ from the synced K8s Secret just as before.
 
 ## Provisioning Secrets
 
-### 1. Create secrets in GCP Secret Manager
+### 1. Populate secret values in GCP Secret Manager
+
+The secret containers (e.g., `feedforge-postgres-user`) and IAM bindings are created automatically by Terraform. You only need to populate the values:
 
 ```bash
 PROJECT_ID="project-76da2d1f-231c-4c94-ae9"
 
 # Postgres credentials
-gcloud secrets create feedforge-postgres-user \
-  --project="${PROJECT_ID}" \
-  --replication-policy="automatic"
 echo -n "feedforge" | gcloud secrets versions add feedforge-postgres-user \
   --project="${PROJECT_ID}" --data-file=-
 
-gcloud secrets create feedforge-postgres-password \
-  --project="${PROJECT_ID}" \
-  --replication-policy="automatic"
 echo -n "<YOUR_PASSWORD>" | gcloud secrets versions add feedforge-postgres-password \
   --project="${PROJECT_ID}" --data-file=-
 
 # Notification credentials (optional — only needed for digest notifications)
-gcloud secrets create feedforge-notification-webhook-url \
-  --project="${PROJECT_ID}" \
-  --replication-policy="automatic"
-gcloud secrets create feedforge-line-channel-token \
-  --project="${PROJECT_ID}" \
-  --replication-policy="automatic"
-gcloud secrets create feedforge-line-user-id \
-  --project="${PROJECT_ID}" \
-  --replication-policy="automatic"
+# echo -n "<WEBHOOK_URL>" | gcloud secrets versions add feedforge-notification-webhook-url \
+#   --project="${PROJECT_ID}" --data-file=-
+# echo -n "<TOKEN>" | gcloud secrets versions add feedforge-line-channel-token \
+#   --project="${PROJECT_ID}" --data-file=-
+# echo -n "<USER_ID>" | gcloud secrets versions add feedforge-line-user-id \
+#   --project="${PROJECT_ID}" --data-file=-
 ```
 
 ### 2. IAM access via Workload Identity
