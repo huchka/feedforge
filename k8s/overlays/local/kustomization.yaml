@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Local development overlay (Tier 2).
+#
+# Targets a kind cluster with Calico CNI and CloudNativePG operator.
+# See k8s/local/kind-config.yaml and scripts/local-cluster-up.sh.
+#
+# This overlay deliberately includes only backend, frontend, and redis from
+# the base. fetcher / summarizer / digest / observability stack require
+# Cloud SQL Proxy patching and are deferred to follow-up PRs.
+
+resources:
+  - namespace.yaml
+  - ../../base/redis
+  - ../../base/backend
+  - ../../base/frontend
+  - cnpg-cluster.yaml
+  - postgres-credentials.yaml
+
+patches:
+  # Delete the backend HPA — kind has no metrics-server by default
+  - patch: |
+      $patch: delete
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: backend
+        namespace: feedforge
+  - path: patches/backend-config-patch.yaml
+  - path: patches/backend-deployment-patch.yaml
+  - path: patches/backend-service-patch.yaml

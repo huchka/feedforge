@@ -41,7 +41,9 @@ Deployment, StatefulSet, CronJob, Job, DaemonSet, Ingress, HPA, Init containers,
 
 ## Getting Started
 
-See [CLAUDE.md](./CLAUDE.md) for the full development plan and phase breakdown.
+For local development (host-direct or kind cluster), see [docs/local-development.md](./docs/local-development.md).
+
+For project context and phase breakdown, see [CLAUDE.md](./CLAUDE.md).
 
 ## Deploying to a Fresh Environment
 

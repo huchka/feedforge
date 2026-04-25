@@ -18,7 +18,7 @@ This project follows a structured SDLC. All tracking lives on GitHub.
 
 1. **Move to "In Progress"** on the project board
 2. **Create a branch** from `main`: `feat/N-short-description`, `fix/N-short-description`, or `infra/N-short-description`
-3. **Implement** — write tests alongside code
+3. **Implement** — write tests alongside code. See [docs/local-development.md](./docs/local-development.md) for the three-tier dev flow (host-direct → kind → GKE dev).
 4. **Commit** using conventional commits: `feat:`, `fix:`, `infra:`, `docs:`, `chore:`
 5. **Push branch and open a PR** using the PR template. Reference the issue with `Closes #N`
 6. **Self-review** the PR diff before merging

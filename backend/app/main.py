@@ -1,8 +1,18 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.middleware import PrometheusMiddleware
 from app.routers import articles, feeds, health, metrics
+
+if os.getenv("DEBUG_PY") == "1":
+    try:
+        import debugpy
+
+        debugpy.listen(("0.0.0.0", 5678))
+    except ImportError:
+        pass
 
 app = FastAPI(title="FeedForge", version="0.1.0")
 

@@ -1,0 +1,33 @@
+# Strip GCP-only init containers and the Secret-Store-CSI volume.
+# Migration init container is kept; it talks to the in-cluster CNPG service
+# via FEEDFORGE_DB_HOST="feedforge-db-rw" (set in backend-config-patch.yaml).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: feedforge
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: cloud-sql-proxy
+          $patch: delete
+        - name: log-exporter
+          $patch: delete
+      containers:
+        - name: backend
+          ports:
+            - containerPort: 8000
+              name: http
+            - containerPort: 5678
+              name: debugpy
+          volumeMounts:
+            - name: app-logs
+              mountPath: /var/log/app
+            - name: postgres-creds
+              $patch: delete
+      volumes:
+        - name: app-logs
+          emptyDir: {}
+        - name: postgres-creds
+          $patch: delete
