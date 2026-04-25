@@ -34,6 +34,7 @@ resource "google_sql_database_instance" "postgres" {
       complexity                  = "COMPLEXITY_DEFAULT"
       reuse_interval              = 2
       disallow_username_substring = true
+      enable_password_policy      = true
     }
 
     backup_configuration {
