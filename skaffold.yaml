@@ -32,7 +32,7 @@ portForward:
   - resourceType: service
     resourceName: frontend
     namespace: feedforge
-    port: 80
+    port: 8080
     localPort: 8080
 
 profiles:

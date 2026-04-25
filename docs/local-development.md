@@ -136,4 +136,10 @@ Stop with Ctrl-C in the `make use-cloudsql` terminal.
 
 **Backend pod CrashLoopBackOff with DB connection refused.** Check the CNPG Cluster is ready: `kubectl get cluster feedforge-db -n feedforge`. The first boot takes ~30s.
 
-**Port-forward dies.** `skaffold dev` re-establishes on each redeploy. If one-shot, re-run `kubectl port-forward svc/backend 8000:8000 -n feedforge`.
+**Port-forward dies.** `skaffold dev` re-establishes on each redeploy. If one-shot, re-run manually:
+
+```bash
+kubectl port-forward -n feedforge svc/backend  8000:8000 &
+kubectl port-forward -n feedforge svc/backend  5678:5678 &
+kubectl port-forward -n feedforge svc/frontend 8080:8080 &
+```
