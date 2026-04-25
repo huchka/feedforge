@@ -1,0 +1,10 @@
+# Point backend at the CNPG primary service. Component-scoped — anything
+# that's not directly tied to using CNPG (debug flags, etc.) lives in the
+# overlay's own backend-config-patch.yaml.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: feedforge
+data:
+  FEEDFORGE_DB_HOST: "feedforge-db-rw"

@@ -1,0 +1,15 @@
+# Mixin: swap Cloud-SQL-via-Auth-Proxy for an in-cluster CNPG Postgres.
+#
+# Apply by adding `components: [../../components/postgres-cnpg]` to an overlay.
+# Requires the CloudNativePG operator to be installed in the cluster (see
+# scripts/local-cluster-up.sh).
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - cluster.yaml
+  - credentials.yaml
+
+patches:
+  - path: backend-patch.yaml
+  - path: backend-config-patch.yaml

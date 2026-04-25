@@ -1,16 +1,11 @@
+# Local-overlay-only env. Postgres host/port/name are set by the
+# postgres-cnpg component. Anything that's about *running locally*
+# (debugger, debug logging) belongs here.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: backend-config
   namespace: feedforge
 data:
-  FEEDFORGE_DB_HOST: "feedforge-db-rw"
-  FEEDFORGE_DB_PORT: "5432"
-  FEEDFORGE_DB_NAME: "feedforge"
-  FEEDFORGE_REDIS_HOST: "redis.feedforge.svc.cluster.local"
-  FEEDFORGE_REDIS_PORT: "6379"
   FEEDFORGE_DEBUG: "true"
   DEBUG_PY: "1"
-  # CLOUD_SQL_INSTANCE removed — no Cloud SQL Proxy in local
-  # LLM and digest config left to base defaults; set FEEDFORGE_GCP_* via host
-  # env if testing Gemini calls from inside the cluster.

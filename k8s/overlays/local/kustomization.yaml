@@ -6,17 +6,21 @@ kind: Kustomization
 # Targets a kind cluster with Calico CNI and CloudNativePG operator.
 # See k8s/local/kind-config.yaml and scripts/local-cluster-up.sh.
 #
-# This overlay deliberately includes only backend, frontend, and redis from
-# the base. fetcher / summarizer / digest / observability stack require
-# Cloud SQL Proxy patching and are deferred to follow-up PRs.
+# Composition:
+#   - base resources (subset — backend, frontend, redis only; fetcher /
+#     summarizer / digest / observability are deferred follow-ups)
+#   - postgres-cnpg component swaps Cloud SQL for in-cluster CNPG
+#   - overlay-level patches handle local-only concerns: debugpy port, HPA
+#     removal (no metrics-server in kind), DEBUG flags
 
 resources:
   - namespace.yaml
   - ../../base/redis
   - ../../base/backend
   - ../../base/frontend
-  - cnpg-cluster.yaml
-  - postgres-credentials.yaml
+
+components:
+  - ../../components/postgres-cnpg
 
 patches:
   # Delete the backend HPA — kind has no metrics-server by default
@@ -28,5 +32,4 @@ patches:
         name: backend
         namespace: feedforge
   - path: patches/backend-config-patch.yaml
-  - path: patches/backend-deployment-patch.yaml
   - path: patches/backend-service-patch.yaml
