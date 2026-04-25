@@ -1,0 +1,15 @@
+# Mixin: prometheus-adapter — bridges Prometheus metrics into the
+# Kubernetes External Metrics API so HPAs can scale on custom metrics
+# (e.g. summarizer's feedforge_queue_length).
+#
+# Requires the `monitoring` Component (Prometheus must exist for adapter to
+# query). Also requires a one-time bootstrap RBAC step in kube-system —
+# see k8s/bootstrap/prometheus-adapter-auth-reader.yaml.
+#
+# Apply by adding `components: [../../components/monitoring-hpa-bridge]` to
+# an overlay (after `monitoring`).
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - prometheus-adapter
