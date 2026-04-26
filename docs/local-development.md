@@ -89,16 +89,34 @@ make deploy-local
 
 ### What's in the local overlay
 
-This first cut includes **backend + frontend + redis + an in-cluster CNPG Postgres**. NetworkPolicy is enforced (Calico), so you can verify policies work before pushing to GKE.
+The local overlay includes the full application pipeline and observability:
 
-Not yet in the local overlay (handled only on the GKE dev cluster):
+- **backend** — FastAPI API server with debugpy remote-debugging port
+- **frontend** — React web UI
+- **redis** — in-cluster Redis for the article queue
+- **fetcher** CronJob — polls RSS feeds
+- **summarizer** Deployment — consumes the queue and generates summaries
+- **digest** CronJob — sends aggregated summaries to notification channels
+- **CNPG Postgres** — in-cluster CloudNativePG database (replaces Cloud SQL)
+- **Prometheus + Grafana + kube-state-metrics** — observability stack
 
-- `fetcher` / `summarizer` / `digest` workloads — need Cloud SQL Proxy and CSI patches
-- Observability stack (Prometheus / Grafana / kube-state-metrics)
-- Gateway / Ingress
-- HPA (kind has no metrics-server by default)
+NetworkPolicy is enforced (Calico), so you can verify policies work before pushing to GKE.
 
-These are tracked as follow-up work.
+Not in the local overlay:
+
+- Gateway / Ingress (not needed for port-forward access)
+- HPA (kind has no metrics-server; both backend and summarizer HPAs are deleted)
+- prometheus-adapter (`monitoring-hpa-bridge` component) — requires cross-namespace RBAC bootstrap that's painful in kind
+
+### Accessing Grafana
+
+After `make deploy-local`, port-forward the Grafana service:
+
+```bash
+kubectl port-forward -n feedforge svc/grafana 3000:3000 &
+```
+
+Open `http://localhost:3000`. The default setup uses anonymous auth (no login required). Pre-configured dashboards and the Prometheus datasource are provisioned automatically via ConfigMaps.
 
 ## Tier 3 — GKE dev cluster
 
@@ -142,4 +160,5 @@ Stop with Ctrl-C in the `make use-cloudsql` terminal.
 kubectl port-forward -n feedforge svc/backend  8000:8000 &
 kubectl port-forward -n feedforge svc/backend  5678:5678 &
 kubectl port-forward -n feedforge svc/frontend 8080:8080 &
+kubectl port-forward -n feedforge svc/grafana  3000:3000 &
 ```

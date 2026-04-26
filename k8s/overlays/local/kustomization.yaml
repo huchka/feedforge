@@ -9,6 +9,9 @@ kind: Kustomization
 # Composition:
 #   - base resources: backend, frontend, redis, fetcher, summarizer, digest
 #   - postgres-cnpg component swaps Cloud SQL for in-cluster CNPG
+#   - monitoring component adds Prometheus + Grafana + kube-state-metrics
+#     (monitoring-hpa-bridge is omitted — prometheus-adapter requires
+#     cross-namespace RBAC bootstrap that's painful in kind)
 #   - overlay-level patches handle local-only concerns: debugpy port, HPA
 #     removal (no metrics-server / prometheus-adapter in kind), DEBUG flags
 
@@ -23,6 +26,7 @@ resources:
 
 components:
   - ../../components/postgres-cnpg
+  - ../../components/monitoring
 
 patches:
   # Delete HPAs — kind has no metrics-server / prometheus-adapter by default
