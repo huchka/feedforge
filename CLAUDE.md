@@ -60,3 +60,8 @@ This project follows a structured SDLC. See [CONTRIBUTING.md](CONTRIBUTING.md) f
 - Monthly target: ~$50 USD. $300 credit / 88 days ≈ $3.40/day.
 - Before ending session: remind user to `terraform destroy` if cluster is up.
 - If budget is tight: scale to 1 node or switch to e2-small.
+
+## Detailed generation rules
+
+For Terraform `*.tf` files: @./.claude/rules/terraform.md
+For Kubernetes manifests under `k8s/`: @./.claude/rules/k8s-yaml.md

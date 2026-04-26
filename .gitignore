@@ -39,3 +39,6 @@ k8s/**/secret-*.yaml
 terraform/environments/**/tfplan
 
 backups/
+
+# Claude Code — local-only settings, not for sharing
+.claude/settings.local.json
