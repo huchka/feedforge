@@ -7,29 +7,38 @@ kind: Kustomization
 # See k8s/local/kind-config.yaml and scripts/local-cluster-up.sh.
 #
 # Composition:
-#   - base resources (subset — backend, frontend, redis only; fetcher /
-#     summarizer / digest / observability are deferred follow-ups)
+#   - base resources: backend, frontend, redis, fetcher, summarizer, digest
 #   - postgres-cnpg component swaps Cloud SQL for in-cluster CNPG
 #   - overlay-level patches handle local-only concerns: debugpy port, HPA
-#     removal (no metrics-server in kind), DEBUG flags
+#     removal (no metrics-server / prometheus-adapter in kind), DEBUG flags
 
 resources:
   - namespace.yaml
   - ../../base/redis
   - ../../base/backend
   - ../../base/frontend
+  - ../../base/fetcher
+  - ../../base/summarizer
+  - ../../base/digest
 
 components:
   - ../../components/postgres-cnpg
 
 patches:
-  # Delete the backend HPA — kind has no metrics-server by default
+  # Delete HPAs — kind has no metrics-server / prometheus-adapter by default
   - patch: |
       $patch: delete
       apiVersion: autoscaling/v2
       kind: HorizontalPodAutoscaler
       metadata:
         name: backend
+        namespace: feedforge
+  - patch: |
+      $patch: delete
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: summarizer
         namespace: feedforge
   - path: patches/backend-config-patch.yaml
   - path: patches/backend-service-patch.yaml

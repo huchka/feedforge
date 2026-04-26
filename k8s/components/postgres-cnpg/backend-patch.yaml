@@ -1,7 +1,9 @@
-# Strip GCP-only init containers and the Secret-Store-CSI volume.
-# Migration init container is kept; its command is wrapped to wait for the
-# CNPG primary's TCP port (avoids a startup race when CNPG initdb hasn't
-# finished by the time backend starts).
+# Local-dev adjustments for the backend Deployment.
+#
+# - Strip the log-exporter sidecar (not useful in kind).
+# - Wrap the run-migrations command to wait for the CNPG primary's TCP
+#   port (avoids a startup race when CNPG initdb hasn't finished).
+# - Add debugpy port for remote debugging.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -11,8 +13,6 @@ spec:
   template:
     spec:
       initContainers:
-        - name: cloud-sql-proxy
-          $patch: delete
         - name: log-exporter
           $patch: delete
         - name: run-migrations
@@ -35,10 +35,3 @@ spec:
           volumeMounts:
             - name: app-logs
               mountPath: /var/log/app
-            - name: postgres-creds
-              $patch: delete
-      volumes:
-        - name: app-logs
-          emptyDir: {}
-        - name: postgres-creds
-          $patch: delete
