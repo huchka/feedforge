@@ -1,8 +1,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Secrets are managed via GCP Secret Manager and synced by the Secrets Store
-# CSI Driver. See docs/secret-manager.md for provisioning instructions.
+# GCP-specific concerns (Cloud SQL Auth Proxy, Secret Store CSI, Workload
+# Identity SA annotations) live in components/postgres-cloudsql.  Local
+# Postgres (CNPG) lives in components/postgres-cnpg.  Each overlay picks
+# its DB strategy via the components: list.
 
 resources:
   - namespace.yaml
@@ -15,7 +17,6 @@ resources:
   - fetcher
   - summarizer
   - digest
-  - secret-store
   # Observability (prometheus, grafana, kube-state-metrics, prometheus-adapter)
   # is opt-in via components: see k8s/components/monitoring{,-hpa-bridge}/.
   # Add to an overlay's components: list to include them.

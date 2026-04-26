@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend
+  namespace: feedforge
+  annotations:
+    iam.gke.io/gcp-service-account: "REPLACE_WITH_GCP_SA_EMAIL"

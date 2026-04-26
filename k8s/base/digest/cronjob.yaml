@@ -30,30 +30,6 @@ spec:
             runAsNonRoot: true
             runAsUser: 999
             runAsGroup: 999
-          initContainers:
-            - name: cloud-sql-proxy
-              image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.15.2
-              restartPolicy: Always
-              args:
-                - "--structured-logs"
-                - "--private-ip"
-                - "--port=5432"
-                - "$(CLOUD_SQL_INSTANCE)"
-              envFrom:
-                - configMapRef:
-                    name: backend-config
-              securityContext:
-                allowPrivilegeEscalation: false
-                readOnlyRootFilesystem: true
-                capabilities:
-                  drop: ["ALL"]
-              resources:
-                requests:
-                  cpu: 10m
-                  memory: 32Mi
-                limits:
-                  cpu: 50m
-                  memory: 64Mi
           containers:
             - name: digest
               image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:cloud-sql
@@ -99,13 +75,6 @@ spec:
                       name: notification-credentials
                       key: LINE_USER_ID
                       optional: true
-              volumeMounts:
-                - name: postgres-creds
-                  mountPath: /mnt/secrets/postgres
-                  readOnly: true
-                - name: notification-creds
-                  mountPath: /mnt/secrets/notification
-                  readOnly: true
               resources:
                 requests:
                   cpu: 50m
@@ -113,16 +82,4 @@ spec:
                 limits:
                   cpu: 100m
                   memory: 128Mi
-          volumes:
-            - name: postgres-creds
-              csi:
-                driver: secrets-store.csi.k8s.io
-                readOnly: true
-                volumeAttributes:
-                  secretProviderClass: postgres-credentials
-            - name: notification-creds
-              csi:
-                driver: secrets-store.csi.k8s.io
-                readOnly: true
-                volumeAttributes:
-                  secretProviderClass: notification-credentials
+

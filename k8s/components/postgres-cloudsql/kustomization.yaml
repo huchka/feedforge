@@ -1,0 +1,31 @@
+# Mixin: Cloud SQL Auth Proxy + GCP Secret Manager via Secrets Store CSI.
+#
+# Adds the Cloud SQL Auth Proxy sidecar, Secret Store CSI volumes for
+# postgres and notification credentials, Workload Identity SA annotations
+# (placeholder — each overlay must patch the real GCP SA email), and
+# SecretProviderClass resources (each overlay must patch the real project ID).
+#
+# Apply by adding `components: [../../components/postgres-cloudsql]` to an
+# overlay.  Requires the Secrets Store CSI driver and Workload Identity
+# Federation for GKE in the target cluster.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - secretproviderclass-postgres.yaml
+  - secretproviderclass-notification.yaml
+
+patches:
+  - path: backend-deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: backend
+      namespace: feedforge
+  - path: fetcher-cronjob-patch.yaml
+  - path: summarizer-deployment-patch.yaml
+  - path: digest-cronjob-patch.yaml
+  - path: configmap-patch.yaml
+  - path: backend-sa-patch.yaml
+  - path: fetcher-sa-patch.yaml
+  - path: summarizer-sa-patch.yaml
+  - path: digest-sa-patch.yaml

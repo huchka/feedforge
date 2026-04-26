@@ -5,6 +5,7 @@ resources:
   - ../../base
 
 components:
+  - ../../components/postgres-cloudsql
   - ../../components/monitoring
   - ../../components/monitoring-hpa-bridge
 
