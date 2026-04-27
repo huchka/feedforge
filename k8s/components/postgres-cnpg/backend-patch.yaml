@@ -1,7 +1,11 @@
-# Strip GCP-only init containers and the Secret-Store-CSI volume.
-# Migration init container is kept; its command is wrapped to wait for the
-# CNPG primary's TCP port (avoids a startup race when CNPG initdb hasn't
-# finished by the time backend starts).
+# Strip log-exporter (GCP Cloud Logging sidecar — not useful in kind),
+# rewrite the migration init container to wait for the CNPG primary's TCP
+# port (avoids a startup race when initdb hasn't finished), and expose the
+# debugpy port for local debugging.
+#
+# The cloud-sql-proxy init container and the postgres-creds CSI volume are
+# now added by components/postgres-cloudsql, so they aren't in base — no
+# delete directives needed here.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -11,8 +15,6 @@ spec:
   template:
     spec:
       initContainers:
-        - name: cloud-sql-proxy
-          $patch: delete
         - name: log-exporter
           $patch: delete
         - name: run-migrations
@@ -35,10 +37,6 @@ spec:
           volumeMounts:
             - name: app-logs
               mountPath: /var/log/app
-            - name: postgres-creds
-              $patch: delete
       volumes:
         - name: app-logs
           emptyDir: {}
-        - name: postgres-creds
-          $patch: delete

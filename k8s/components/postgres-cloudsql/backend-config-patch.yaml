@@ -1,0 +1,8 @@
+# Add the Cloud-SQL-specific instance key. Real instance is set per-overlay.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: feedforge
+data:
+  CLOUD_SQL_INSTANCE: "PLACEHOLDER"

@@ -56,10 +56,6 @@ spec:
                   name: postgres-credentials
                   key: POSTGRES_PASSWORD
                   optional: true
-          volumeMounts:
-            - name: postgres-creds
-              mountPath: /mnt/secrets/postgres
-              readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -67,32 +63,3 @@ spec:
             limits:
               cpu: 100m
               memory: 128Mi
-        - name: cloud-sql-proxy
-          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.15.2
-          args:
-            - "--structured-logs"
-            - "--private-ip"
-            - "--port=5432"
-            - "$(CLOUD_SQL_INSTANCE)"
-          envFrom:
-            - configMapRef:
-                name: backend-config
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop: ["ALL"]
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-            limits:
-              cpu: 50m
-              memory: 64Mi
-      volumes:
-        - name: postgres-creds
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: postgres-credentials

@@ -5,6 +5,7 @@ resources:
   - ../../base
 
 components:
+  - ../../components/postgres-cloudsql
   - ../../components/monitoring
   - ../../components/monitoring-hpa-bridge
 
@@ -16,9 +17,5 @@ images:
 
 patches:
   - path: patches/backend-config-patch.yaml
-  - path: patches/summarizer-sa-patch.yaml
-  - path: patches/backend-sa-patch.yaml
-  - path: patches/fetcher-sa-patch.yaml
-  - path: patches/digest-sa-patch.yaml
   - path: patches/spc-postgres-patch.yaml
   - path: patches/spc-notification-patch.yaml
