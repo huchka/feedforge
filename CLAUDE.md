@@ -45,8 +45,9 @@ This project follows a structured SDLC. See [CONTRIBUTING.md](CONTRIBUTING.md) f
 - Format with `terraform fmt` before commit.
 
 ### Kubernetes
-- NEVER run `kubectl` commands — the user runs all K8s commands themselves (learning project).
-- Provide the commands to run, but don't execute them.
+- NEVER run `kubectl` commands that mutate cluster state (apply, create, delete, edit, scale, rollout, label/annotate, etc.) — the user runs those themselves (learning project).
+- Read-only and local-only `kubectl` is fine (e.g. `kubectl get`, `kubectl describe`, `kubectl logs`, `kubectl kustomize` — the last is pure local YAML rendering and doesn't contact the cluster).
+- Provide mutation commands for the user to run, but don't execute them.
 - NEVER `kubectl edit` — always change manifests and re-apply.
 - **Deploy with `skaffold run`** — NEVER suggest `kubectl apply -k`. Skaffold handles image build, tagging, and deploy. Raw `kubectl apply -k` overwrites image tags with stale values from manifests.
 - Label everything: `app.kubernetes.io/name`, `app.kubernetes.io/component`, `app.kubernetes.io/part-of: feedforge`.
