@@ -1,0 +1,51 @@
+# JSON 6902 patches: explicit list positions matter here.
+#   * cloud-sql-proxy MUST be initContainers[0]: it's a sidecar (restartPolicy:
+#     Always) that the run-migrations init container connects to on
+#     localhost:5432.
+#   * postgres-creds is APPENDED to the backend container's volumeMounts and
+#     to the pod volumes list, after app-logs — matching the base order.
+#
+# A strategic merge patch with $setElementOrder works for ordering but the
+# directive itself leaks into the rendered Deployment in kustomize 5.5, so
+# JSON 6902 is used instead.
+- op: add
+  path: /spec/template/spec/initContainers/0
+  value:
+    name: cloud-sql-proxy
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.15.2
+    restartPolicy: Always
+    args:
+      - "--structured-logs"
+      - "--private-ip"
+      - "--port=5432"
+      - "$(CLOUD_SQL_INSTANCE)"
+    envFrom:
+      - configMapRef:
+          name: backend-config
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["ALL"]
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 50m
+        memory: 64Mi
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    name: postgres-creds
+    mountPath: /mnt/secrets/postgres
+    readOnly: true
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: postgres-creds
+    csi:
+      driver: secrets-store.csi.k8s.io
+      readOnly: true
+      volumeAttributes:
+        secretProviderClass: postgres-credentials

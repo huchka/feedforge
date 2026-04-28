@@ -1,0 +1,27 @@
+# Mixin: connect Postgres workloads to Cloud SQL via the Auth Proxy sidecar +
+# Workload Identity, with credentials synced from Secret Manager via the
+# Secret-Store CSI driver.
+#
+# Apply by adding `components: [../../components/postgres-cloudsql]` to an
+# overlay. Symmetric to components/postgres-cnpg.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - secretproviderclass.yaml
+
+patches:
+  - path: backend-config-patch.yaml
+  - path: backend-patch.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: backend
+  - path: backend-sa-patch.yaml
+  - path: fetcher-patch.yaml
+  - path: fetcher-sa-patch.yaml
+  - path: summarizer-patch.yaml
+  - path: summarizer-sa-patch.yaml
+  - path: digest-patch.yaml
+  - path: digest-sa-patch.yaml

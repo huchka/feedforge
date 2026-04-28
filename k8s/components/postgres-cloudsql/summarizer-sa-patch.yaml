@@ -1,0 +1,12 @@
+# NOTE: summarizer's GSA bundles Cloud SQL Client + Vertex AI User roles —
+# it's not the cloud-sql-proxy GSA used by the other workloads. The WI
+# annotation lives in this Component because Cloud SQL access requires it;
+# if/when Vertex AI is extracted into its own Component, this annotation
+# should move with it.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: summarizer
+  namespace: feedforge
+  annotations:
+    iam.gke.io/gcp-service-account: feedforge-summarizer@project-76da2d1f-231c-4c94-ae9.iam.gserviceaccount.com
