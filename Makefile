@@ -12,7 +12,7 @@ help:
 	@echo "  make cluster-down      Delete the cluster"
 	@echo "  make deploy-local      skaffold run -p local (one-shot deploy)"
 	@echo "  make dev-local         skaffold dev -p local (watch + redeploy)"
-	@echo "  make port-forward      backend :8000, debugpy :5678, frontend :8080"
+	@echo "  make port-forward      backend :8000, debugpy :5678, frontend :8080, grafana :3000, prometheus :9090"
 	@echo ""
 	@echo "Hybrid — Tier 1 against real Cloud SQL:"
 	@echo "  make use-cloudsql      Run Cloud SQL Auth Proxy on localhost:5433"
@@ -38,11 +38,14 @@ dev-local:
 # Foreground; Ctrl-C tears all three down. Use after `make deploy-local`
 # (skaffold run drops port-forwards on exit; skaffold dev keeps them).
 port-forward:
-	@echo "==> Forwarding backend :8000, debugpy :5678, frontend :8080 (Ctrl-C to stop)"
+	@echo "==> Forwarding backend :8000, debugpy :5678, frontend :8080,"
+	@echo "    grafana :3000, prometheus :9090 (Ctrl-C to stop)"
 	@trap 'kill 0' EXIT INT TERM; \
-		kubectl port-forward -n feedforge svc/backend  8000:8000 & \
-		kubectl port-forward -n feedforge svc/backend  5678:5678 & \
-		kubectl port-forward -n feedforge svc/frontend 8080:8080 & \
+		kubectl port-forward -n feedforge svc/backend    8000:8000 & \
+		kubectl port-forward -n feedforge svc/backend    5678:5678 & \
+		kubectl port-forward -n feedforge svc/frontend   8080:8080 & \
+		kubectl port-forward -n feedforge svc/grafana    3000:3000 & \
+		kubectl port-forward -n feedforge svc/prometheus 9090:9090 & \
 		wait
 
 use-cloudsql:
