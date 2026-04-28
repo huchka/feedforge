@@ -48,6 +48,16 @@ jobs:
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
 
+      # The local overlay references secret-notification.yaml, which is
+      # gitignored (each developer fills in real LINE creds locally). For CI
+      # render-only validation, copy the committed .example to the expected
+      # path. Stubs are fine here -- we never apply the rendered manifest.
+      - name: Bootstrap local secrets (placeholder)
+        if: matrix.overlay == 'local'
+        run: |
+          cp k8s/overlays/local/secret-notification.yaml.example \
+             k8s/overlays/local/secret-notification.yaml
+
       - name: Render overlay
         run: |
           kubectl kustomize k8s/overlays/${{ matrix.overlay }} > rendered.yaml
