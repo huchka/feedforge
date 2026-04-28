@@ -1,0 +1,24 @@
+# Strip the notification-credentials Secret-Store CSI volume from the
+# daily-digest CronJob. The CSI driver isn't installed in kind, so the
+# volume mount would fail. The container's secretKeyRef env vars
+# (NOTIFICATION_WEBHOOK_URL, LINE_*) are marked optional: true and resolve
+# to empty when the Secret doesn't exist — digest will run but won't
+# actually send notifications, which is fine for local development.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-digest
+  namespace: feedforge
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: digest
+              volumeMounts:
+                - name: notification-creds
+                  $patch: delete
+          volumes:
+            - name: notification-creds
+              $patch: delete

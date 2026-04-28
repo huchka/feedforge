@@ -7,17 +7,22 @@ kind: Kustomization
 # See k8s/local/kind-config.yaml and scripts/local-cluster-up.sh.
 #
 # Composition:
-#   - base resources (subset — backend, frontend, redis only; fetcher /
-#     summarizer / digest / observability are deferred follow-ups)
+#   - all 7 base workloads (redis, backend, frontend, fetcher, summarizer,
+#     digest, plus CNPG postgres provisioned by the postgres-cnpg component)
 #   - postgres-cnpg component swaps Cloud SQL for in-cluster CNPG
 #   - overlay-level patches handle local-only concerns: debugpy port, HPA
-#     removal (no metrics-server in kind), DEBUG flags
+#     removal (no metrics-server / prometheus-adapter in kind), removal of
+#     CSI-mounted notification creds (no Secret-Store CSI driver in kind),
+#     DEBUG flags
 
 resources:
   - namespace.yaml
   - ../../base/redis
   - ../../base/backend
   - ../../base/frontend
+  - ../../base/fetcher
+  - ../../base/summarizer
+  - ../../base/digest
 
 components:
   - ../../components/postgres-cnpg
@@ -31,5 +36,15 @@ patches:
       metadata:
         name: backend
         namespace: feedforge
+  # Delete the summarizer HPA — uses an External metric (queue length via
+  # prometheus-adapter), which isn't installed in the local kind cluster.
+  - patch: |
+      $patch: delete
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: summarizer
+        namespace: feedforge
   - path: patches/backend-config-patch.yaml
   - path: patches/backend-service-patch.yaml
+  - path: patches/digest-patch.yaml
