@@ -89,16 +89,38 @@ make deploy-local
 
 ### What's in the local overlay
 
-This first cut includes **backend + frontend + redis + an in-cluster CNPG Postgres**. NetworkPolicy is enforced (Calico), so you can verify policies work before pushing to GKE.
+The full app pipeline plus the observability stack:
 
-Not yet in the local overlay (handled only on the GKE dev cluster):
+- **App**: backend, frontend, redis, fetcher (CronJob), summarizer, digest (CronJob)
+- **Database**: in-cluster CNPG Postgres (`feedforge-db` Cluster, single primary)
+- **Observability**: Prometheus + Grafana + kube-state-metrics (via the `monitoring` Component)
 
-- `fetcher` / `summarizer` / `digest` workloads — need Cloud SQL Proxy and CSI patches
-- Observability stack (Prometheus / Grafana / kube-state-metrics)
+NetworkPolicy is enforced (Calico), so you can verify policies work before pushing to GKE.
+
+Not in the local overlay (handled only on the GKE dev cluster):
+
+- HPA (kind has no metrics-server / prometheus-adapter by default — backend and summarizer HPAs are deleted in the overlay)
+- `monitoring-hpa-bridge` Component (prometheus-adapter; needs cross-namespace RBAC bootstrap that's painful in kind)
+- LINE notification credentials for digest (the CronJob is deployed but will fail at the schedule unless you add a stub Secret)
 - Gateway / Ingress
-- HPA (kind has no metrics-server by default)
 
-These are tracked as follow-up work.
+### Accessing Grafana and Prometheus
+
+`make port-forward` now forwards the monitoring UIs alongside the app:
+
+| URL | What |
+|-----|------|
+| http://localhost:8080 | Frontend |
+| http://localhost:8000 | Backend API |
+| http://localhost:3000 | Grafana — login `admin` / `feedforge` |
+| http://localhost:9090 | Prometheus UI |
+
+Grafana ships with the FeedForge backend dashboard preloaded (under "Dashboards" in the sidebar). The Prometheus datasource is auto-configured to scrape Prometheus at `http://prometheus.feedforge.svc.cluster.local:9090`.
+
+Useful Prometheus queries to try at `localhost:9090/graph`:
+- `up` — which targets are scraping successfully
+- `feedforge_http_requests_total` — backend request counter (hit a few endpoints first)
+- `kube_pod_status_phase{namespace="feedforge"}` — pod phase counts via kube-state-metrics
 
 ## Tier 3 — GKE dev cluster
 
