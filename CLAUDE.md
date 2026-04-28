@@ -62,6 +62,17 @@ This project follows a structured SDLC. See [CONTRIBUTING.md](CONTRIBUTING.md) f
 - Before ending session: remind user to `terraform destroy` if cluster is up.
 - If budget is tight: scale to 1 node or switch to e2-small.
 
+## Plan Mode for non-trivial changes
+
+Drop into Plan Mode (Shift+Tab) and save the plan to `.plans/YYYYMMDD-<slug>.md` before executing for:
+- Any `*.tf` change beyond a one-line tweak
+- New or significantly-modified manifests under `k8s/`
+- Multi-file refactors crossing module boundaries
+- Any `size:L` issue, or `size:M` with architectural tradeoffs
+- Mutations to Cloud SQL, GCS state buckets, KMS keys, or Workload Identity bindings
+
+Skip for: typo fixes, doc-only changes, single-line bug fixes, dep bumps with no API change. See `.plans/README.md` for naming and structure.
+
 ## Detailed generation rules
 
 For Terraform `*.tf` files: @./.claude/rules/terraform.md
