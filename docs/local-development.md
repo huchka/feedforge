@@ -101,8 +101,52 @@ Not in the local overlay (handled only on the GKE dev cluster):
 
 - HPA (kind has no metrics-server / prometheus-adapter by default — backend and summarizer HPAs are deleted in the overlay)
 - `monitoring-hpa-bridge` Component (prometheus-adapter; needs cross-namespace RBAC bootstrap that's painful in kind)
-- LINE notification credentials for digest (the CronJob is deployed but will fail at the schedule unless you add a stub Secret)
+- Secret-Store CSI driver (notification credentials come from a developer-provided plain Secret — see *Local notification credentials* below)
 - Gateway / Ingress
+
+### Local notification credentials
+
+The daily-digest CronJob pushes a summary to LINE (or Slack). Locally there's no Secret-Store CSI driver, so credentials live in a plain K8s Secret you provide yourself. The file is gitignored (`.gitignore` rule `k8s/**/secret-*.yaml`); only the `.example` template is committed.
+
+One-time setup:
+
+```bash
+cp k8s/overlays/local/secret-notification.yaml.example \
+   k8s/overlays/local/secret-notification.yaml
+# edit secret-notification.yaml with real values
+```
+
+How to get a LINE channel access token + user-id:
+
+1. [LINE Developers Console](https://developers.line.biz/console/) → create a Messaging API channel
+2. *Channel access token (long-lived)* → `LINE_CHANNEL_TOKEN`
+3. *Basic settings* tab → your LINE user ID → `LINE_USER_ID`
+
+The base CronJob hardcodes `FEEDFORGE_DIGEST_PROVIDER=line`. To use Slack instead, fill `NOTIFICATION_WEBHOOK_URL` and add a configmap patch overriding the provider env var.
+
+Verify end-to-end without waiting for 23:30 UTC:
+
+```bash
+# Trigger an immediate run
+kubectl create job --from=cronjob/daily-digest \
+  -n feedforge digest-test-$(date +%s)
+
+# Watch it complete
+kubectl get jobs -n feedforge -w
+
+# Inspect logs (or check your LINE / Slack for the message)
+kubectl logs -n feedforge -l job-name=digest-test-<timestamp>
+```
+
+Pod should exit `Completed`. If creds are wrong (stub `REPLACE_ME` values), the pod gets past startup but fails at the HTTP call to the LINE API and exits `Error` — informative, not a crashloop.
+
+If you forget the copy step, `make deploy-local` fails at kustomize render time:
+
+```
+Error: accumulating resources: ... no such file or directory
+```
+
+That's intentional — the failure surfaces missing creds at deploy time, not at 23:30 UTC.
 
 ### Accessing Grafana and Prometheus
 

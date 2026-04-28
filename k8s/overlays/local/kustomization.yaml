@@ -15,8 +15,9 @@ kind: Kustomization
 #     cross-namespace RBAC bootstrap that's painful in kind)
 #   - overlay-level patches handle local-only concerns: debugpy port, HPA
 #     removal (no metrics-server / prometheus-adapter in kind), removal of
-#     CSI-mounted notification creds (no Secret-Store CSI driver in kind),
-#     DEBUG flags
+#     CSI-mounted notification creds volume (no Secret-Store CSI driver in
+#     kind -- creds come from a developer-provided plain Secret instead;
+#     see secret-notification.yaml.example), DEBUG flags
 
 resources:
   - namespace.yaml
@@ -26,6 +27,13 @@ resources:
   - ../../base/fetcher
   - ../../base/summarizer
   - ../../base/digest
+  # Real notification credentials for local digest testing. The file is
+  # gitignored (see .gitignore: k8s/**/secret-*.yaml); each developer copies
+  # secret-notification.yaml.example -> secret-notification.yaml and fills in
+  # real LINE channel token + user-id (or Slack webhook). See
+  # docs/local-development.md for setup. `kubectl kustomize` will fail until
+  # the .yaml exists -- that's intentional, so missing creds surface early.
+  - secret-notification.yaml
 
 components:
   - ../../components/postgres-cnpg
