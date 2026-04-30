@@ -3,6 +3,24 @@ provider "google" {
   region  = var.region
 }
 
+# Short-lived OAuth2 access token from the operator's gcloud identity.
+# Used by the kubernetes + helm providers to authenticate to GKE.
+data "google_client_config" "default" {}
+
+provider "kubernetes" {
+  host                   = "https://${module.gke.cluster_endpoint}"
+  cluster_ca_certificate = base64decode(module.gke.cluster_ca_certificate)
+  token                  = data.google_client_config.default.access_token
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = "https://${module.gke.cluster_endpoint}"
+    cluster_ca_certificate = base64decode(module.gke.cluster_ca_certificate)
+    token                  = data.google_client_config.default.access_token
+  }
+}
+
 # --- Project APIs ---
 
 resource "google_project_service" "secretmanager" {
@@ -160,4 +178,16 @@ module "github_actions" {
   source            = "../../modules/github-actions"
   project_id        = var.project_id
   github_repository = "huchka/feedforge"
+}
+
+# --- Argo CD (GitOps continuous delivery) ---
+#
+# Installed via the official argo/argo-cd Helm chart. See
+# terraform/modules/argocd/main.tf for component config.
+# Wiki design: Migrate-Deploy-to-Argo-CD. Plan: .plans/20260430-argocd-terraform.md.
+module "argocd" {
+  source        = "../../modules/argocd"
+  chart_version = "7.7.7"
+
+  depends_on = [module.gke]
 }

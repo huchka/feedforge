@@ -1,39 +1,84 @@
-# JSON 6902 patches: explicit list positions matter here.
-#   * cloud-sql-proxy MUST be initContainers[0]: it's a sidecar (restartPolicy:
-#     Always) that the run-migrations init container connects to on
-#     localhost:5432.
-#   * postgres-creds is APPENDED to the backend container's volumeMounts and
-#     to the pod volumes list, after app-logs — matching the base order.
+# JSON 6902 patches: explicit ordering for initContainers.
 #
-# A strategic merge patch with $setElementOrder works for ordering but the
-# directive itself leaks into the rendered Deployment in kustomize 5.5, so
-# JSON 6902 is used instead.
-- op: add
-  path: /spec/template/spec/initContainers/0
+# kustomize 5.5 mis-orders `op: add` to /initContainers/0 when the base array
+# already contains a native sidecar (initContainer with restartPolicy: Always).
+# Workaround: replace the entire initContainers array so position is exact.
+#
+# Order matters:
+#   * cloud-sql-proxy[0] — native sidecar, starts first, accepts connections
+#     on localhost:5432 for subsequent init containers.
+#   * run-migrations[1]  — alembic upgrade; depends on the proxy being up.
+#   * log-exporter[2]    — native sidecar; tails the app log file written by
+#     the main container. Order vs run-migrations doesn't matter.
+- op: replace
+  path: /spec/template/spec/initContainers
   value:
-    name: cloud-sql-proxy
-    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.15.2
-    restartPolicy: Always
-    args:
-      - "--structured-logs"
-      - "--private-ip"
-      - "--port=5432"
-      - "$(CLOUD_SQL_INSTANCE)"
-    envFrom:
-      - configMapRef:
-          name: backend-config
-    securityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop: ["ALL"]
-    resources:
-      requests:
-        cpu: 10m
-        memory: 32Mi
-      limits:
-        cpu: 50m
-        memory: 64Mi
+    - name: cloud-sql-proxy
+      image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.15.2
+      restartPolicy: Always
+      args:
+        - "--structured-logs"
+        - "--private-ip"
+        - "--port=5432"
+        - "$(CLOUD_SQL_INSTANCE)"
+      envFrom:
+        - configMapRef:
+            name: backend-config
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          cpu: 50m
+          memory: 64Mi
+    - name: run-migrations
+      image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:cloud-sql
+      command: ["alembic", "upgrade", "head"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      envFrom:
+        - configMapRef:
+            name: backend-config
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+      volumeMounts:
+        - name: postgres-creds
+          mountPath: /mnt/secrets/postgres
+          readOnly: true
+    - name: log-exporter
+      image: busybox:1.37
+      restartPolicy: Always
+      command: ["sh", "-c"]
+      args:
+        - touch /var/log/app/access.log && tail -f /var/log/app/access.log
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          cpu: 20m
+          memory: 32Mi
+      volumeMounts:
+        - name: app-logs
+          mountPath: /var/log/app
 - op: add
   path: /spec/template/spec/containers/0/volumeMounts/-
   value:
