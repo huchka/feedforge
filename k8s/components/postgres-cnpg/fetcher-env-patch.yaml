@@ -1,0 +1,26 @@
+# Wire FEEDFORGE_DB_USER/PASSWORD env vars from the postgres-credentials Secret
+# into the fetcher CronJob. app.secrets falls back to env vars when no CSI
+# mount is present (kind has no Secret-Store CSI driver).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: feed-fetcher
+  namespace: feedforge
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: fetcher
+              env:
+                - name: FEEDFORGE_DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_USER
+                - name: FEEDFORGE_DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_PASSWORD

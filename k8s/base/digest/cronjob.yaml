@@ -43,38 +43,8 @@ spec:
                 - configMapRef:
                     name: backend-config
               env:
-                - name: FEEDFORGE_DB_USER
-                  valueFrom:
-                    secretKeyRef:
-                      name: postgres-credentials
-                      key: POSTGRES_USER
-                      optional: true
-                - name: FEEDFORGE_DB_PASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: postgres-credentials
-                      key: POSTGRES_PASSWORD
-                      optional: true
                 - name: FEEDFORGE_DIGEST_PROVIDER
                   value: "line"
-                - name: FEEDFORGE_DIGEST_WEBHOOK_URL
-                  valueFrom:
-                    secretKeyRef:
-                      name: notification-credentials
-                      key: NOTIFICATION_WEBHOOK_URL
-                      optional: true
-                - name: FEEDFORGE_DIGEST_LINE_TOKEN
-                  valueFrom:
-                    secretKeyRef:
-                      name: notification-credentials
-                      key: LINE_CHANNEL_TOKEN
-                      optional: true
-                - name: FEEDFORGE_DIGEST_LINE_USER_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: notification-credentials
-                      key: LINE_USER_ID
-                      optional: true
               volumeMounts:
                 - name: notification-creds
                   mountPath: /mnt/secrets/notification

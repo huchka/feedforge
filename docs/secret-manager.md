@@ -1,9 +1,12 @@
 # Secret Management with GCP Secret Manager
 
-FeedForge secrets are stored in [GCP Secret Manager](https://cloud.google.com/secret-manager)
-and synced into pods via the
-[Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/) with the
-[GCP provider](https://github.com/GoogleCloudPlatform/secrets-store-csi-driver-provider-gcp).
+FeedForge production secrets are stored in
+[GCP Secret Manager](https://cloud.google.com/secret-manager) and exposed to
+pods as files under `/mnt/secrets/<group>/` via the
+[Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/) with
+the [GCP provider](https://github.com/GoogleCloudPlatform/secrets-store-csi-driver-provider-gcp).
+Workloads read those files directly through `app.secrets`; no Kubernetes
+`Secret` objects are involved on the cloud path.
 
 ## Architecture
 
@@ -11,42 +14,45 @@ and synced into pods via the
 GCP Secret Manager
         │
         ▼
-  Secrets Store CSI Driver (DaemonSet on each node)
+  Secrets Store CSI Driver (DaemonSet, --enable-secret-rotation)
         │
         ▼
   SecretProviderClass (per secret group)
         │
-        ├── Mounts secrets as files in /mnt/secrets/<group>/
-        └── Syncs to K8s Secret objects (secretObjects)
-              │
-              └── Consumed by pods via env vars (secretKeyRef / envFrom)
+        └── Mounts secrets as files in /mnt/secrets/<group>/
+               │
+               └── Read by app.secrets on each access
+                   (DB: per pool connection; notifications: per send)
 ```
 
-The CSI driver syncs secrets from GCP Secret Manager into:
+There is no longer a synced K8s `Secret` for `postgres-credentials` /
+`notification-credentials` on the dev cluster. This eliminates two prior
+problems:
 
-1. **Files** mounted at `/mnt/secrets/<group>/` inside the pod
-2. **Kubernetes Secret objects** (via `secretObjects`) that pods reference through
-   existing `secretKeyRef` and `envFrom` configurations
-
-This means application code does **not** need to change — env vars are populated
-from the synced K8s Secret just as before.
+1. **Cold-start race.** The synced Secret was produced asynchronously by a
+   controller after the first pod mounted the SPC volume, so pods started
+   before it existed. CSI mount files are written synchronously on container
+   start, so the file path doesn't race.
+2. **No hot-rotation.** Env vars resolved from a Secret are frozen at pod
+   start. CSI files refresh on the rotation poll, so new pool connections
+   pick up the new value without a restart.
 
 ## Secrets Inventory
 
-### postgres-credentials
+### postgres-credentials (`/mnt/secrets/postgres/`)
 
-| GCP Secret Name | K8s Secret Key | Used By |
+| GCP Secret Name | File Name | Used By |
 |---|---|---|
 | `feedforge-postgres-user` | `POSTGRES_USER` | backend, summarizer, fetcher, digest |
 | `feedforge-postgres-password` | `POSTGRES_PASSWORD` | backend, summarizer, fetcher, digest |
 
-### notification-credentials
+### notification-credentials (`/mnt/secrets/notification/`)
 
-| GCP Secret Name | K8s Secret Key | Used By |
+| GCP Secret Name | File Name | Used By |
 |---|---|---|
-| `feedforge-notification-webhook-url` | `NOTIFICATION_WEBHOOK_URL` | digest (optional) |
-| `feedforge-line-channel-token` | `LINE_CHANNEL_TOKEN` | digest (optional) |
-| `feedforge-line-user-id` | `LINE_USER_ID` | digest (optional) |
+| `feedforge-notification-webhook-url` | `NOTIFICATION_WEBHOOK_URL` | digest (Slack provider) |
+| `feedforge-line-channel-token` | `LINE_CHANNEL_TOKEN` | digest (LINE provider) |
+| `feedforge-line-user-id` | `LINE_USER_ID` | digest (LINE provider) |
 
 ## Prerequisites
 
@@ -57,8 +63,8 @@ from the synced K8s Secret just as before.
    k8s/bootstrap/install-csi-secrets-store.sh
    ```
 
-   This installs the CSI driver (with `syncSecret.enabled=true`) and the GCP
-   provider via Helm. The script is idempotent — safe to re-run.
+   The script installs the CSI driver with `enableSecretRotation=true` and
+   `rotationPollInterval=2m`, plus the GCP provider DaemonSet. It is idempotent.
 
 2. **Workload Identity** must be enabled on the GKE cluster (already configured).
 
@@ -69,7 +75,8 @@ from the synced K8s Secret just as before.
 
 ### 1. Populate secret values in GCP Secret Manager
 
-The secret containers (e.g., `feedforge-postgres-user`) and IAM bindings are created automatically by Terraform. You only need to populate the values:
+The secret containers (e.g., `feedforge-postgres-user`) and IAM bindings are
+created automatically by Terraform. Only the values need to be populated:
 
 ```bash
 PROJECT_ID="project-76da2d1f-231c-4c94-ae9"
@@ -81,7 +88,7 @@ echo -n "feedforge" | gcloud secrets versions add feedforge-postgres-user \
 echo -n "<YOUR_PASSWORD>" | gcloud secrets versions add feedforge-postgres-password \
   --project="${PROJECT_ID}" --data-file=-
 
-# Notification credentials (optional — only needed for digest notifications)
+# Notification credentials (only needed if the digest provider is enabled)
 # echo -n "<WEBHOOK_URL>" | gcloud secrets versions add feedforge-notification-webhook-url \
 #   --project="${PROJECT_ID}" --data-file=-
 # echo -n "<TOKEN>" | gcloud secrets versions add feedforge-line-channel-token \
@@ -102,102 +109,86 @@ Terraform (`terraform/environments/dev/main.tf`) as
 | `feedforge-cloudsql-proxy` | All postgres + notification secrets |
 | `feedforge-summarizer` | Postgres secrets |
 
-These are applied automatically by `terraform apply`. No manual `gcloud`
-commands needed.
-
 ### 3. SecretProviderClass PROJECT_ID
 
-The base `SecretProviderClass` manifests in `k8s/base/secret-store/` contain a
-literal `PROJECT_ID` placeholder. Each overlay (e.g., `k8s/overlays/dev/`)
-patches these with the real GCP project ID via kustomize strategic merge patches:
+The base `SecretProviderClass` manifests have a literal `PROJECT_ID`
+placeholder. Each overlay patches it with the real project ID via
+strategic-merge patches:
 
-- `patches/spc-postgres-patch.yaml`
-- `patches/spc-notification-patch.yaml`
+- `k8s/overlays/dev/patches/spc-postgres-patch.yaml`
+- `k8s/overlays/dev/patches/spc-notification-patch.yaml`
 
-When adding a new environment, copy these patch files into the new overlay and
-update the project ID. **Do not edit the base manifests directly.**
+When adding a new environment, copy these patch files and update the project
+ID. **Do not edit the base manifests directly.**
 
 ### 4. Deploy
 
 ```bash
-# Apply the updated manifests
-skaffold run
+skaffold run -p dev
 
-# Verify secrets are synced
-kubectl get secrets -n feedforge
-kubectl describe secretproviderclasspodstatus -n feedforge
+# The synced K8s Secrets are intentionally absent. Verify the SPCs are healthy
+# and the CSI mount is present in the pods:
+kubectl -n feedforge get secretproviderclass
+kubectl -n feedforge exec deploy/backend -- ls /mnt/secrets/postgres
 ```
 
 ## Rotating Secrets
 
-To rotate a secret, add a new version in Secret Manager:
+Add a new version in Secret Manager:
 
 ```bash
 echo -n "<NEW_VALUE>" | gcloud secrets versions add feedforge-postgres-password \
   --project="${PROJECT_ID}" --data-file=-
 ```
 
-How the new value propagates depends on how pods consume the secret:
+Within `rotationPollInterval` (2 minutes) the CSI driver re-reads Secret
+Manager and rewrites the file at `/mnt/secrets/<group>/<file>`. Propagation
+into the running app:
 
-- **Mounted files** (`/mnt/secrets/<group>/`): The CSI driver's
-  `--rotation-poll-interval` (default: 2 minutes) automatically refreshes
-  mounted files when a new secret version is published. No pod restart needed.
-- **Environment variables** (`secretKeyRef` / `envFrom`): Env vars are resolved
-  at pod start time and are **not** auto-refreshed. A rolling restart is
-  required to pick up new values:
+- **DB credentials.** SQLAlchemy's pool calls `_connect` (in
+  `backend/app/database.py`) on each new connection, which re-reads the
+  current values from `/mnt/secrets/postgres/`. New pool connections use the
+  new password; existing pooled connections keep working with the old value
+  until they recycle (idle timeout / `pool_recycle`). No pod restart needed.
+- **Notification credentials.** Read on every send call inside
+  `_send_slack` / `_send_line`, so the next digest run picks up the new
+  value automatically.
 
-  ```bash
-  kubectl rollout restart deployment/backend -n feedforge
-  ```
-
-**Recommended practice:** If your application can read secrets from the mounted
-files at `/mnt/secrets/<group>/` instead of env vars, rotation is fully
-automatic. If using env vars (the current default), perform a rolling restart
-after publishing a new secret version.
-
-## Migration from Kubernetes Secrets
-
-Previously, secrets were stored as plain Kubernetes Secrets created manually via
-`kubectl create secret`. The old approach had these limitations:
-
-- Base64-encoded, not encrypted at rest by default
-- No audit logging for secret access
-- No built-in rotation mechanism
-- Secrets visible to anyone with `kubectl get secret` access
-
-Once Secret Manager is confirmed working, any manually-created K8s Secrets
-should be removed:
+To force immediate adoption (e.g. emergency rotation), restart the deployments
+or wait for the cron'd workloads to fire:
 
 ```bash
-# Only run after confirming Secret Manager secrets are working
-kubectl delete secret postgres-credentials -n feedforge
-kubectl delete secret notification-credentials -n feedforge
+kubectl -n feedforge rollout restart deployment/backend deployment/summarizer
 ```
 
-## First Deploy
+## Local Development
 
-On a cold-start (first `skaffold run` on a fresh cluster), there is a brief race
-condition:
+Local-dev paths do not have the Secret-Store CSI driver installed, so
+`/mnt/secrets/...` does not exist. `app.secrets.read_secret` falls back to
+environment variables:
 
-1. The CSI driver creates the K8s Secret (`postgres-credentials`,
-   `notification-credentials`) only **after** the first pod mounts the
-   `SecretProviderClass` volume.
-2. Other pods that reference these secrets via `secretKeyRef` may briefly
-   CrashLoopBackOff until the Secret objects exist.
+| File key | Env-var fallback |
+|---|---|
+| `POSTGRES_USER` | `FEEDFORGE_DB_USER` |
+| `POSTGRES_PASSWORD` | `FEEDFORGE_DB_PASSWORD` |
+| `NOTIFICATION_WEBHOOK_URL` | `FEEDFORGE_DIGEST_WEBHOOK_URL` |
+| `LINE_CHANNEL_TOKEN` | `FEEDFORGE_DIGEST_LINE_TOKEN` |
+| `LINE_USER_ID` | `FEEDFORGE_DIGEST_LINE_USER_ID` |
 
-All `secretKeyRef` entries are marked `optional: true` to prevent immediate pod
-failures. However, pods still need the env vars to function — their readiness
-probes will fail until the secrets are available, keeping them out of the Service
-endpoints until they are healthy.
-
-This is a one-time bootstrap issue. After the first successful pod mount, the
-K8s Secret persists and subsequent pod starts find it immediately.
+- **Docker-compose / pure Python** (`.env.local`): `pydantic-settings` loads
+  the `FEEDFORGE_*` vars; the helper hits the env-var branch.
+- **Local kind cluster** (`k8s/overlays/local`): the postgres-cnpg
+  component (`k8s/components/postgres-cnpg/{backend,fetcher,summarizer,digest}-env-patch.yaml`)
+  injects `FEEDFORGE_DB_USER` / `FEEDFORGE_DB_PASSWORD` from the in-cluster
+  `postgres-credentials` Secret via `secretKeyRef`. The local overlay's
+  `patches/digest-patch.yaml` does the same for the notification secret
+  (sourced from the developer-provided `secret-notification.yaml`).
 
 ## Troubleshooting
 
 ### Pods stuck in ContainerCreating
 
-The CSI driver must be installed and the GCP provider must be running. Check:
+The CSI driver and the GCP provider must be running:
 
 ```bash
 kubectl get pods -n kube-system -l app=secrets-store-csi-driver
@@ -206,22 +197,20 @@ kubectl get pods -n kube-system -l app=csi-secrets-store-provider-gcp
 
 ### Permission denied accessing secrets
 
-Verify Workload Identity binding and IAM roles:
+Verify Workload Identity binding and IAM:
 
 ```bash
-# Check the KSA → GSA binding
 kubectl get serviceaccount <name> -n feedforge -o yaml | grep gcp-service-account
-
-# Check the GSA has secretAccessor role
 gcloud secrets get-iam-policy feedforge-postgres-user --project="${PROJECT_ID}"
 ```
 
-### Secrets not updating after rotation
+### App still uses old credentials after rotation
 
-Mounted files auto-refresh via the CSI driver's rotation poll interval. If the
-application reads secrets from **env vars**, those are set at pod start and
-require a restart:
+Mounted files refresh on the rotation poll (≤ 2 minutes). If the file content
+is current but the app is still using the old value, the SQLAlchemy pool is
+holding old connections — wait for `pool_recycle`, force traffic to drain
+the pool, or `kubectl rollout restart` the workload.
 
 ```bash
-kubectl rollout restart deployment/<name> -n feedforge
+kubectl -n feedforge exec deploy/backend -- cat /mnt/secrets/postgres/POSTGRES_USER
 ```

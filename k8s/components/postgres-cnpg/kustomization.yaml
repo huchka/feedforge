@@ -13,3 +13,10 @@ resources:
 patches:
   - path: backend-patch.yaml
   - path: backend-config-patch.yaml
+  # Env-var fallback for app.secrets — Secret-Store CSI driver isn't installed
+  # in kind, so the four workloads source DB creds from the in-cluster
+  # postgres-credentials Secret via secretKeyRef.
+  - path: backend-env-patch.yaml
+  - path: fetcher-env-patch.yaml
+  - path: summarizer-env-patch.yaml
+  - path: digest-env-patch.yaml

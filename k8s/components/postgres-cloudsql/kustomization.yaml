@@ -18,6 +18,7 @@ patches:
       version: v1
       kind: Deployment
       name: backend
+  - path: backend-init-patch.yaml
   - path: backend-sa-patch.yaml
   - path: fetcher-patch.yaml
   - path: fetcher-sa-patch.yaml

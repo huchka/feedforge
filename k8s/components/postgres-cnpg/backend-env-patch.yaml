@@ -1,0 +1,39 @@
+# Wire FEEDFORGE_DB_USER/PASSWORD env vars from the postgres-credentials Secret
+# (created by credentials.yaml) into both the run-migrations init container
+# (alembic) and the main backend container. The Secret is present at pod start,
+# so no `optional: true` is needed. The base manifests no longer carry these
+# refs because the cloud-sql overlay reads creds from the CSI mount instead.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: feedforge
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: run-migrations
+          env:
+            - name: FEEDFORGE_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            - name: FEEDFORGE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+      containers:
+        - name: backend
+          env:
+            - name: FEEDFORGE_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            - name: FEEDFORGE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD

@@ -1,0 +1,24 @@
+# Wire FEEDFORGE_DB_USER/PASSWORD env vars from the postgres-credentials Secret
+# into the summarizer Deployment. app.secrets falls back to env vars when no
+# CSI mount is present (kind has no Secret-Store CSI driver).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: summarizer
+  namespace: feedforge
+spec:
+  template:
+    spec:
+      containers:
+        - name: summarizer
+          env:
+            - name: FEEDFORGE_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            - name: FEEDFORGE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD

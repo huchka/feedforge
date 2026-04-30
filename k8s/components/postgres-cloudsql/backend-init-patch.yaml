@@ -1,0 +1,18 @@
+# Mount the postgres-creds CSI volume on the run-migrations init container.
+# The volume + main-container mount are added by backend-patch.yaml (JSON 6902);
+# this strategic-merge patch adds the init-container mount by name so alembic
+# can read /mnt/secrets/postgres/POSTGRES_{USER,PASSWORD} via app.secrets.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: feedforge
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: run-migrations
+          volumeMounts:
+            - name: postgres-creds
+              mountPath: /mnt/secrets/postgres
+              readOnly: true
