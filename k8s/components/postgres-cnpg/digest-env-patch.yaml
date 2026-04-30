@@ -1,0 +1,26 @@
+# Wire FEEDFORGE_DB_USER/PASSWORD env vars from the postgres-credentials Secret
+# into the daily-digest CronJob. Notification credentials are local-overlay
+# concern (handled in overlays/local/patches/digest-patch.yaml).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-digest
+  namespace: feedforge
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: digest
+              env:
+                - name: FEEDFORGE_DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_USER
+                - name: FEEDFORGE_DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_PASSWORD

@@ -13,11 +13,24 @@ from sqlalchemy.orm import joinedload
 from app.config import settings
 from app.database import SessionLocal
 from app.models.article import Article
+from app.secrets import get_notification_secret
 
 logger = logging.getLogger(__name__)
 
 LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push"
 LINE_TEXT_LIMIT = 5000
+
+
+def _slack_webhook_url() -> str:
+    return get_notification_secret("NOTIFICATION_WEBHOOK_URL", "FEEDFORGE_DIGEST_WEBHOOK_URL")
+
+
+def _line_token() -> str:
+    return get_notification_secret("LINE_CHANNEL_TOKEN", "FEEDFORGE_DIGEST_LINE_TOKEN")
+
+
+def _line_user_id() -> str:
+    return get_notification_secret("LINE_USER_ID", "FEEDFORGE_DIGEST_LINE_USER_ID")
 
 
 def count_recent_articles(db) -> tuple[int, int]:
@@ -74,7 +87,7 @@ def format_empty_digest() -> str:
 
 
 def _send_slack(text: str, total_articles: int) -> None:
-    resp = httpx.post(settings.digest_webhook_url, json={"text": text}, timeout=30)
+    resp = httpx.post(_slack_webhook_url(), json={"text": text}, timeout=30)
     resp.raise_for_status()
     logger.info("Slack notification sent (%d chars, %d articles)", len(text), total_articles)
 
@@ -92,9 +105,9 @@ def _send_line(text: str, total_articles: int) -> None:
 
     resp = httpx.post(
         LINE_PUSH_URL,
-        headers={"Authorization": f"Bearer {settings.digest_line_token}"},
+        headers={"Authorization": f"Bearer {_line_token()}"},
         json={
-            "to": settings.digest_line_user_id,
+            "to": _line_user_id(),
             "messages": [{"type": "text", "text": text}],
         },
         timeout=30,
@@ -117,11 +130,11 @@ def main() -> None:
         logger.error("Unknown digest_provider %r (expected: slack, line)", provider)
         sys.exit(1)
 
-    if provider == "slack" and not settings.digest_webhook_url:
-        logger.error("FEEDFORGE_DIGEST_WEBHOOK_URL is required for Slack provider")
+    if provider == "slack" and not _slack_webhook_url():
+        logger.error("Slack webhook URL is required for Slack provider (NOTIFICATION_WEBHOOK_URL file or FEEDFORGE_DIGEST_WEBHOOK_URL env)")
         sys.exit(1)
-    if provider == "line" and (not settings.digest_line_token or not settings.digest_line_user_id):
-        logger.error("FEEDFORGE_DIGEST_LINE_TOKEN and FEEDFORGE_DIGEST_LINE_USER_ID are required for LINE provider")
+    if provider == "line" and (not _line_token() or not _line_user_id()):
+        logger.error("LINE token and user ID are required for LINE provider (LINE_CHANNEL_TOKEN/LINE_USER_ID files or FEEDFORGE_DIGEST_LINE_TOKEN/FEEDFORGE_DIGEST_LINE_USER_ID env)")
         sys.exit(1)
 
     logger.info("Daily digest starting (provider=%s, lookback=%dh)", provider, settings.digest_lookback_hours)

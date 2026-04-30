@@ -42,19 +42,6 @@ spec:
               envFrom:
                 - configMapRef:
                     name: backend-config
-              env:
-                - name: FEEDFORGE_DB_USER
-                  valueFrom:
-                    secretKeyRef:
-                      name: postgres-credentials
-                      key: POSTGRES_USER
-                      optional: true
-                - name: FEEDFORGE_DB_PASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: postgres-credentials
-                      key: POSTGRES_PASSWORD
-                      optional: true
               resources:
                 requests:
                   cpu: 50m

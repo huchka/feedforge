@@ -10,8 +10,11 @@ set -euo pipefail
 
 # --- Secrets Store CSI Driver (Helm) ---
 # Deploys the DaemonSet that mounts external secrets as volumes in pods.
-# syncSecret.enabled=true allows the driver to sync mounted secrets into
-# native Kubernetes Secret objects (used by secretObjects in SecretProviderClass).
+# enableSecretRotation=true makes the driver re-poll Secret Manager every
+# rotationPollInterval (2m) so rotated values land on disk without a pod
+# restart. syncSecret.enabled is left off — workloads read CSI mount files
+# directly via app.secrets, so the synced K8s Secret objects are no longer
+# needed (and removing them keeps secrets out of `kubectl get secret`).
 
 helm repo add secrets-store-csi-driver \
   https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
@@ -20,7 +23,8 @@ helm repo update secrets-store-csi-driver
 helm upgrade --install csi-secrets-store \
   secrets-store-csi-driver/secrets-store-csi-driver \
   --namespace kube-system \
-  --set syncSecret.enabled=true \
+  --set enableSecretRotation=true \
+  --set rotationPollInterval=2m \
   --wait
 
 echo "Secrets Store CSI Driver installed."
