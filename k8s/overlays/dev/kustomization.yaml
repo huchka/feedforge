@@ -10,10 +10,14 @@ components:
   - ../../components/monitoring-hpa-bridge
 
 images:
+  # Pinned to the commit currently running in dev (Phase 1 PR merge,
+  # PR #43 = 90d9ebf). CI uses full-length SHAs; the previous short-SHA
+  # `a42276a` was never built — see Phase 2 plan & PR description.
+  # Phase 3 will commit this from CI on every push to main.
   - name: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend
-    newTag: a42276a
+    newTag: 90d9ebf503c332c4d1b428c61926404a3870be51
   - name: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/frontend
-    newTag: a42276a
+    newTag: 90d9ebf503c332c4d1b428c61926404a3870be51
 
 patches:
   - path: patches/backend-config-patch.yaml

@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: feedforge-dev
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: feedforge-dev
+    app.kubernetes.io/part-of: feedforge
+  finalizers:
+    # Cascading delete: removing this Application also removes the workloads
+    # it created. Without this, `kubectl delete app feedforge-dev` orphans the
+    # Deployments. Revisit when prod arrives (#19).
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/huchka/feedforge.git
+    targetRevision: HEAD
+    path: k8s/overlays/dev
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: feedforge
+
+  # syncPolicy intentionally omitted — manual sync only in Phase 2 to avoid
+  # racing the still-active .github/workflows/deploy.yaml (skaffold). Phase 3
+  # adds:
+  #   syncPolicy:
+  #     automated:
+  #       prune: true
+  #       selfHeal: true
+  #     syncOptions:
+  #       - PruneLast=true
+
+  revisionHistoryLimit: 10
