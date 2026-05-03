@@ -23,14 +23,13 @@ spec:
     server: https://kubernetes.default.svc
     namespace: feedforge
 
-  # syncPolicy intentionally omitted — manual sync only in Phase 2 to avoid
-  # racing the still-active .github/workflows/deploy.yaml (skaffold). Phase 3
-  # adds:
-  #   syncPolicy:
-  #     automated:
-  #       prune: true
-  #       selfHeal: true
-  #     syncOptions:
-  #       - PruneLast=true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      # Prune in the final wave so renamed resources don't briefly disappear
+      # mid-sync.
+      - PruneLast=true
 
   revisionHistoryLimit: 10

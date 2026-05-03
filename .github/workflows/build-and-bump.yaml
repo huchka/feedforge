@@ -1,0 +1,93 @@
+name: build-and-bump
+
+# Build + push images to Artifact Registry, then commit the new tag to the
+# dev overlay's kustomization.yaml. Argo CD picks up the commit (~3 min poll)
+# and reconciles the cluster — no kubectl from CI.
+#
+# Replaces the old deploy.yaml (skaffold run → kubectl apply), which can no
+# longer patch cluster-scoped resources adopted by Argo CD without bumping
+# the GH Actions SA's IAM. Phase 4 narrows the SA further.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Serialize to keep the tag-bump commit race window small. Don't cancel
+  # in-flight — we want the previous build to finish so its tag-bump lands.
+  group: build-and-bump-main
+  cancel-in-progress: false
+
+jobs:
+  build-and-bump:
+    name: build + push + bump dev tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      id-token: write    # WIF for GCP auth
+      contents: write    # commit tag bump back to main
+    env:
+      SKAFFOLD_VERSION: v2.13.2
+      OVERLAY_PATH: k8s/overlays/dev
+      BACKEND_IMAGE: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend
+      FRONTEND_IMAGE: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/frontend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Default GITHUB_TOKEN is fine for pushing back to the same repo
+          # when the job has `contents: write` (set above).
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SA_EMAIL }}
+          token_format: access_token
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Install skaffold
+        run: |
+          curl -fsSLo skaffold "https://storage.googleapis.com/skaffold/releases/${SKAFFOLD_VERSION}/skaffold-linux-amd64"
+          sudo install skaffold /usr/local/bin/
+          skaffold version
+
+      - name: Build + push images
+        run: skaffold build --push --tag=${{ github.sha }}
+
+      - name: Bump image tags in dev overlay
+        run: |
+          cd "${OVERLAY_PATH}"
+          kustomize edit set image \
+            "${BACKEND_IMAGE}=${BACKEND_IMAGE}:${{ github.sha }}" \
+            "${FRONTEND_IMAGE}=${FRONTEND_IMAGE}:${{ github.sha }}"
+
+      - name: Commit + push tag bump
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${OVERLAY_PATH}/kustomization.yaml"
+          if git diff --cached --quiet; then
+            echo "No tag change — nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore(deploy): bump dev image tag to ${GITHUB_SHA::12} [skip ci]"
+          for i in 1 2 3; do
+            if git pull --rebase origin main && git push; then
+              exit 0
+            fi
+            echo "push rejected, retry $i/3…"
+            sleep 5
+          done
+          echo "::error::Failed to push tag bump after 3 retries"
+          exit 1
