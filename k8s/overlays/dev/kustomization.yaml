@@ -16,10 +16,10 @@ components:
 images:
 - name: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend
   newName: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend
-  newTag: 592b57fda6b963849657d2c31914c093ce741d67
+  newTag: 762f38f4d45fc0720109ab0cf2bb110d4122486e
 - name: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/frontend
   newName: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/frontend
-  newTag: 592b57fda6b963849657d2c31914c093ce741d67
+  newTag: 762f38f4d45fc0720109ab0cf2bb110d4122486e
 
 patches:
 - path: patches/backend-config-patch.yaml
