@@ -1,9 +1,12 @@
 # Argo CD install via the official argo/argo-cd Helm chart.
 #
-# Three components are disabled to fit the e2-medium x 2 dev cluster:
-#   - dex                    (no SSO in v1)
-#   - notifications          (no Slack/email in v1)
-#   - applicationSet         (no ApplicationSet generators in v1)
+# Trimmed for the e2-medium x 2 dev cluster:
+#   - dex.enabled = false              (no SSO in v1)
+#   - notifications.enabled = false    (no Slack/email in v1)
+#   - applicationSet.replicas = 0      (chart has no `enabled` toggle for
+#                                       this component — Deployment exists,
+#                                       0 pods. We don't use ApplicationSet
+#                                       generators in v1.)
 #
 # Application CRDs are NOT managed here — they live as YAML in
 # k8s/argocd/applications/ and are applied with kubectl. See the
@@ -41,7 +44,10 @@ resource "helm_release" "argocd" {
         enabled = false
       }
       applicationSet = {
-        enabled = false
+        # The chart unconditionally renders the ApplicationSet controller
+        # (no top-level `enabled` key in 7.x or 9.x values). replicas: 0
+        # is the closest off-switch the chart exposes.
+        replicas = 0
       }
     })
   ]

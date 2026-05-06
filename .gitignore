@@ -36,7 +36,7 @@ Thumbs.db
 k8s/**/secret-*.yaml
 !k8s/**/secret-*.yaml.example
 
-terraform/environments/**/tfplan
+terraform/environments/**/*.tfplan
 
 backups/
 
