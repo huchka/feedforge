@@ -32,4 +32,18 @@ spec:
       # mid-sync.
       - PruneLast=true
 
+  # GKE's NEG controller writes these annotations on Services backing a
+  # Gateway/Ingress. Without ignoring them, selfHeal flaps every few
+  # seconds: Argo CD strips controller-set annotations → controller re-adds
+  # them → drift → strip again. Both keys are GKE-managed:
+  #   - cloud.google.com/neg: rewritten from {"ingress": true} (legacy form
+  #     in our manifests) to {"exposed_ports":{...}} (explicit form).
+  #   - cloud.google.com/neg-status: zones + NEG IDs, status only.
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      jqPathExpressions:
+        - '.metadata.annotations."cloud.google.com/neg"'
+        - '.metadata.annotations."cloud.google.com/neg-status"'
+
   revisionHistoryLimit: 10
