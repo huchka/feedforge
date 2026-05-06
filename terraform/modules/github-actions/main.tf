@@ -44,9 +44,11 @@ resource "google_service_account" "github_actions" {
 }
 
 locals {
+  # CI no longer talks to the cluster — Argo CD owns deploys (Phase 3 of #32).
+  # The SA only needs to push images; it pushes commits back to the repo via
+  # the workflow's GITHUB_TOKEN, not via GCP IAM.
   github_actions_roles = [
     "roles/artifactregistry.writer", # push images
-    "roles/container.developer",     # deploy to GKE (narrower than container.admin)
   ]
 }
 
