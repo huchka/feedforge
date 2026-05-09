@@ -2,6 +2,10 @@
 # restartPolicy: Always) and the postgres-creds Secret-Store CSI volume.
 # Notification creds (LINE webhook etc.) are owned by the digest's own base
 # files — not Cloud SQL related — and stay there.
+#
+# Safe vs the kustomize 5.5 ordered-array reorder bug (#43, #45): the base
+# CronJob declares no initContainers, so this patch supplies the whole array
+# rather than a subset — there are no unmatched base items to be reordered.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -15,6 +19,7 @@ spec:
           initContainers:
             - name: cloud-sql-proxy
               image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.15.2
+              imagePullPolicy: IfNotPresent
               restartPolicy: Always
               args:
                 - "--structured-logs"
@@ -29,6 +34,8 @@ spec:
                 readOnlyRootFilesystem: true
                 capabilities:
                   drop: ["ALL"]
+                seccompProfile:
+                  type: RuntimeDefault
               resources:
                 requests:
                   cpu: 10m
