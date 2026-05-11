@@ -62,6 +62,19 @@ This project follows a structured SDLC. See [CONTRIBUTING.md](CONTRIBUTING.md) f
 - Before ending session: remind user to `terraform destroy` if cluster is up.
 - If budget is tight: scale to 1 node or switch to e2-small.
 
+## Automatic infra review
+
+After any turn that modifies one or more `*.tf` files, or YAML files under `k8s/`, **before sending the final reply**:
+
+1. Invoke the `feedforge-reviewer` subagent via the Task tool. It defaults to `git diff HEAD` (covers your unstaged edits) — no need to pass scope unless reviewing something else (a specific commit, a different branch).
+2. If the reviewer returns **BLOCKERS**: address each one in this turn before completing. Re-invoke the reviewer after fixes only if the fixes were non-trivial.
+3. If **WARNINGS** or **NOTES**: summarize them in your reply so the user can see them at a glance. Don't auto-fix warnings — they may be intentional tradeoffs the user owns.
+4. **Skip the review** only for these cases (and note the skip in your reply when you do):
+   - Comment-only / whitespace-only edits
+   - Reverting an edit you just made in the same turn
+   - The user explicitly says "skip review" for this turn
+5. Don't recursively invoke the reviewer from inside another subagent — main-session invocations only.
+
 ## Plan Mode for non-trivial changes
 
 Drop into Plan Mode (Shift+Tab) and save the plan to `.plans/YYYYMMDD-<slug>.md` before executing for:

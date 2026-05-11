@@ -2,6 +2,11 @@
 # Secret-Store CSI volume. Sidecar pattern keeps the proxy alive for the
 # summarizer's worker loop. Strategic merge appends cloud-sql-proxy after
 # the summarizer container, matching the original base-file ordering.
+#
+# Safe vs the kustomize 5.5 ordered-array reorder bug (#43, #45): the patch's
+# containers list is a superset of the base (it names every base container),
+# so there are no unmatched base items left to reorder. Container order in a
+# Deployment is also non-functional, unlike initContainers.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

@@ -33,12 +33,15 @@ spec:
       initContainers:
         - name: run-migrations
           image: us-central1-docker.pkg.dev/project-76da2d1f-231c-4c94-ae9/feedforge/backend:cloud-sql
+          imagePullPolicy: IfNotPresent
           command: ["alembic", "upgrade", "head"]
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
           envFrom:
             - configMapRef:
                 name: backend-config
@@ -51,6 +54,7 @@ spec:
               memory: 128Mi
         - name: log-exporter
           image: busybox:1.37
+          imagePullPolicy: IfNotPresent
           restartPolicy: Always
           command: ["sh", "-c"]
           args:
@@ -60,6 +64,8 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
           resources:
             requests:
               cpu: 10m
